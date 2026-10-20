@@ -33,6 +33,11 @@ public class PlayerMove : MonoBehaviour
         {
             _yVelocity += Gravity * Time.deltaTime;
         }
+        else
+        {
+            // 땅에 있으면 중력 초기화
+            _yVelocity = 0f;
+        }
 
 
         // 4. 만약에 점프키를 누르면 && 땅이라면 점프를 한다.
