@@ -4,10 +4,23 @@ using UnityEngine;
 public class PlayerGunFire : MonoBehaviour
 {
     [SerializeField] private ParticleSystem _hitEffectPrefabs;
+
+    [Header("Stat")]
     [SerializeField] private float _range = 100f;            // 사거리
     [SerializeField] private float _damage = 10f;            // 공격력
     [SerializeField] private float _fireInterval = 0.1f;     // 발사 속도
+    [SerializeField] private int _maxBulletCount = 30;
+    [SerializeField] private float _reloadingTime = 3f;
+
     private float _fireTimer = 0f;
+    private int _bulletCount;
+    private float _reloadingTimer;
+    private bool _isReloading = false;
+
+    private void Start()
+    {
+        _bulletCount = _maxBulletCount;
+    }
 
     private void Update()
     {
@@ -15,12 +28,35 @@ public class PlayerGunFire : MonoBehaviour
         _fireTimer -= Time.deltaTime;
 
         // 1. 마우스 왼쪽 버튼 입력 받기
-        if (Input.GetButton("Fire1") && _fireTimer <= 0f)
+        if (Input.GetButton("Fire1") && _fireTimer <= 0f & _bulletCount > 0)
         {
+            _bulletCount--;
             _fireTimer = _fireInterval;
             Shoot();
         }
 
+        // 2. R키 누르면 총알 재장전 시작
+        if (Input.GetKeyDown(KeyCode.R) && !_isReloading)
+        {
+            _isReloading = true;
+            _reloadingTimer = 0f;
+        }
+
+        // 재장전 중
+        if (_isReloading)
+        {
+            _reloadingTimer += Time.deltaTime;
+            if (_reloadingTimer > _reloadingTime)   // 재장전 시간이 지났다면
+            {
+                _isReloading = false;
+                Reloading();    // 재장전 완료;
+            }
+        }
+    }
+
+    private void Reloading()
+    {
+        _bulletCount = _maxBulletCount;
     }
 
     private void Shoot()
