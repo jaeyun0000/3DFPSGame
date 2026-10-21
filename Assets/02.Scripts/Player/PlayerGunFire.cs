@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 
 // a=마우스 왼쪽 버튼을 누르면 바라보는 방향으로 총알을 발사하고 싶다
@@ -14,8 +15,6 @@ public class PlayerGunFire : MonoBehaviour
 
     private float _fireTimer = 0f;
     private int _bulletCount;
-    private float _reloadingTimer;
-    private bool _isReloading = false;
 
     private void Start()
     {
@@ -36,27 +35,19 @@ public class PlayerGunFire : MonoBehaviour
         }
 
         // 2. R키 누르면 총알 재장전 시작
-        if (Input.GetKeyDown(KeyCode.R) && !_isReloading)
+        if (Input.GetKeyDown(KeyCode.R))
         {
-            _isReloading = true;
-            _reloadingTimer = 0f;
-        }
-
-        // 재장전 중
-        if (_isReloading)
-        {
-            _reloadingTimer += Time.deltaTime;
-            if (_reloadingTimer > _reloadingTime)   // 재장전 시간이 지났다면
-            {
-                _isReloading = false;
-                Reloading();    // 재장전 완료;
-            }
+            StartCoroutine(Reloading_Coroutine());
         }
     }
 
-    private void Reloading()
+    private IEnumerator Reloading_Coroutine()
     {
+        Debug.Log("재장전 시작");
+        yield return new WaitForSeconds(_reloadingTime);
+
         _bulletCount = _maxBulletCount;
+        Debug.Log("재장전 완료");
     }
 
     private void Shoot()
