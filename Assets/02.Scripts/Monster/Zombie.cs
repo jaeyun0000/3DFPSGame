@@ -10,7 +10,7 @@ public enum ZombieState
 {
     Idle,       // 대기: 제자리에서 플레이어를 기다린다.
     Trace,      // 추격: 플레이어를 쫓아간다.
-    Comback,    // 복귀: 처음 자리로 돌아간다.
+    Comeback,    // 복귀: 처음 자리로 돌아간다.
     Attack,     // 공격: 일정 시간마다 플레이어를 때린다.
     Hit,        // 피격: 공격(총알, 폭탄)을 받아 잠깐 멈칫한다.
     Death       // 죽음: 쓰러지고 잠시 뒤 사라진다.
@@ -20,9 +20,14 @@ public class Zombie : MonoBehaviour
 {
     [Header("Stat")]
     [SerializeField] private float _detectDistance = 8f; // 플레이어를 발견하는 거리
+    [SerializeField] private float _comebackDistance = 15f; // 처음 자리에서 이만큼 멀어지면 돌아가는 거리
+    [SerializeField] private float _attackRange = 1.5f; // 공격 범위
+    [SerializeField] private float _attackInterval = 1.2f; // 공격 간격
     [SerializeField] private float _moveSpeed = 5f; // 이동 속도
 
+    private float _attackTimer = 0f;
     private CharacterController _controller;
+    private Vector3 _startPosition;
     private GameObject _player;
 
     private ZombieState _state = ZombieState.Idle;
@@ -30,6 +35,7 @@ public class Zombie : MonoBehaviour
     private void Start()
     {
         _controller = GetComponent<CharacterController>();
+        _startPosition = transform.position;
 
         // 게임을 시작하면 플레이어를 찾는다.
         _player = GameObject.FindGameObjectWithTag("Player");
@@ -47,8 +53,8 @@ public class Zombie : MonoBehaviour
                 Trace();
                 break;
 
-            case ZombieState.Comback:
-                Comback();
+            case ZombieState.Comeback:
+                Comeback();
                 break;
 
             case ZombieState.Attack:
@@ -82,6 +88,24 @@ public class Zombie : MonoBehaviour
     private void Trace()
     {
         // Todo. Run 애니메이션 실행
+        // 처음 자리에서 너무 멀어지면 돌아간다.
+
+        if (Vector3.Distance(transform.position, _startPosition) > _comebackDistance)
+        {
+            Debug.Log($"{_state} -> Comeback");
+            _state = ZombieState.Comeback;
+            return;
+        }
+
+        // 플레이어가 공격 거리 안이면 공격한다.
+        if (Vector3.Distance(transform.position, _player.transform.position) <= _attackRange)
+        {
+            _attackTimer = 0f;
+            Debug.Log($"{_state} -> Attack");
+            _state = ZombieState.Attack;
+            return;
+        }
+
         Vector3 direction = _player.transform.position - transform.position;
         direction.y = 0f;
         direction.Normalize();
@@ -90,13 +114,44 @@ public class Zombie : MonoBehaviour
         _controller.SimpleMove(direction * _moveSpeed);
     }
 
-    private void Comback()
+    private void Comeback()
     {
+        // 처음 자리에 도착하면 Idle
+        if (Vector3.Distance(transform.position, _startPosition) < 1f)
+        {
+            Debug.Log($"{_state} -> Idle");
+            _state = ZombieState.Idle;
+            return;
+        }
 
+        // 처음 자리로 돌아간다.
+        Vector3 direction = _startPosition - transform.position;
+        direction.y = 0f;
+        direction.Normalize();
+
+        transform.forward = direction;
+        _controller.SimpleMove(direction * _moveSpeed);
     }
 
+    // 공격: 일정 시간마다 플레이어를 때린다.
     private void Attack()
     {
+        // 플레이어와 공격 사정 거리 밖으로 나가면 Trace 상태로 돌아간다.
+        float distance = Vector3.Distance(transform.position, _player.transform.position);
+        if (distance > _attackRange)
+        {
+            Debug.Log($"{_state} -> Trace");
+            _state = ZombieState.Trace;
+        }
 
+        _attackTimer += Time.deltaTime;
+
+        if (_attackTimer >= _attackInterval)
+        {
+            // Todo. 공격 애니메이션 실행
+            // Todo. 플레이어를 때려
+            Debug.Log("Player를 공격");
+            _attackTimer = 0f;
+        }
     }
 }
