@@ -3,22 +3,17 @@ using UnityEngine.UI;
 
 public class UI_PlayerStats : MonoBehaviour
 {
-    [SerializeField] private Slider _healthBarSlider;
-    [SerializeField] private Slider _staminaBarSlider;
+    // Todo. ZombieHealthBar를 이용해서 체력과 스태미나 UI 구현
+    [SerializeField] private Slider _healthSlider;
+    [SerializeField] private Slider _staminaSlider;
 
-    private PlayerMove _playerMove;
+    [SerializeField] private Player _player;
+    [SerializeField] private PlayerMove _playerMove;
 
-    private void Awake()
+
+    private void Update()
     {
-        _playerMove = GetComponent<PlayerMove>();
-    }
-
-    private void LateUpdate()
-    {
-        // 0 ~ 100% -> 0 ~ 1
-        _staminaBarSlider.value = _playerMove.Stamina / _playerMove.MaxStamina;
-
-        // 빌보드: 체력바가 카메라를 쳐다보게한다.
-        transform.forward = Camera.main.transform.forward;
+        _healthSlider.value = _player.Health / _player.MaxHealth;
+        _staminaSlider.value = _playerMove.Stamina / PlayerMove.MaxStamina;
     }
 }

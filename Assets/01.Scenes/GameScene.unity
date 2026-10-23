@@ -1764,6 +1764,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1486099018}
+  - component: {fileID: 1486099019}
   m_Layer: 5
   m_Name: UI_PlayerStats
   m_TagString: Untagged
@@ -1792,6 +1793,22 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &1486099019
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1486099017}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 79c955964f4e2e244bca70ce25c92ce3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UI_PlayerStats
+  _healthSlider: {fileID: 1983300087}
+  _staminaSlider: {fileID: 227542511}
+  _player: {fileID: 1878405139}
+  _playerMove: {fileID: 1878405135}
 --- !u!1 &1521462200
 GameObject:
   m_ObjectHideFlags: 0
@@ -2437,11 +2454,11 @@ GameObject:
   - component: {fileID: 1878405133}
   - component: {fileID: 1878405132}
   - component: {fileID: 1878405131}
+  - component: {fileID: 1878405139}
   - component: {fileID: 1878405134}
   - component: {fileID: 1878405135}
   - component: {fileID: 1878405137}
   - component: {fileID: 1878405138}
-  - component: {fileID: 1878405139}
   - component: {fileID: 1878405136}
   m_Layer: 7
   m_Name: Player
@@ -2553,7 +2570,6 @@ MonoBehaviour:
   _moveSpeed: 7
   _sprintSpeed: 12
   _jumpPower: 10
-  _maxStamina: 100
   _staminaRecovery: 15
   _sprintCost: 10
   _jumpCost: 20
@@ -2628,11 +2644,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 1878405129}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 79c955964f4e2e244bca70ce25c92ce3, type: 3}
+  m_Script: {fileID: 11500000, guid: be96321ce274fcf4e98f452d6075b246, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::UI_PlayerStats
-  _healthBarSlider: {fileID: 1983300087}
-  _staminaBarSlider: {fileID: 227542511}
+  m_EditorClassIdentifier: Assembly-CSharp::Player
+  _maxHealth: 100
 --- !u!1001 &1904041242
 PrefabInstance:
   m_ObjectHideFlags: 0

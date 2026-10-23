@@ -5,6 +5,7 @@ public class PlayerMove : MonoBehaviour
 {
     private const float Gravity = -20f;
     private const int MaxJump = 2;
+    public const float MaxStamina = 100f;
 
     private float _yVelocity = 0f;  // 위아래 속도, 매 프레임마다 중력 가속도가 붙는다.
     private int _jumpCount = 0;      // 점프 횟수
@@ -14,7 +15,6 @@ public class PlayerMove : MonoBehaviour
     [SerializeField] private float _moveSpeed = 7f;
     [SerializeField] private float _sprintSpeed = 12f;
     [SerializeField] private float _jumpPower = 10f;
-    [SerializeField] private float _maxStamina = 100f;
     [SerializeField] private float _staminaRecovery = 15f;
     [SerializeField] private float _sprintCost = 10f;
     [SerializeField] private float _jumpCost = 20f;
@@ -22,19 +22,18 @@ public class PlayerMove : MonoBehaviour
     [Header("Component")]
     [SerializeField] private CharacterController _characterController;
 
-    public float MaxStamina => _maxStamina;
     public float Stamina => _stamina;
 
     private void Awake()
     {
         _characterController = GetComponent<CharacterController>();
-        _stamina = _maxStamina;
+        _stamina = MaxStamina;
     }
 
     private void Update()
     {
         // 0. 스태미나 회복
-        _stamina = Mathf.Min(_maxStamina, _stamina + _staminaRecovery * Time.deltaTime);
+        _stamina = Mathf.Min(MaxStamina, _stamina + _staminaRecovery * Time.deltaTime);
 
         // 1. 키보드 입력을 받는다.
         float h = Input.GetAxisRaw("Horizontal");   // -1, 0, 1
