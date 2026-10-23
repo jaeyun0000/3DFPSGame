@@ -17,7 +17,7 @@ public enum ZombieState
     Death       // 죽음: 쓰러지고 잠시 뒤 사라진다.
 }
 
-public class Zombie : MonoBehaviour, Idamageable
+public class Zombie : MonoBehaviour, IDamageable
 {
     [Header("Stat")]
     [SerializeField] private float _detectDistance = 8f;    // 플레이어를 발견하는 거리
@@ -25,20 +25,26 @@ public class Zombie : MonoBehaviour, Idamageable
     [SerializeField] private float _attackRange = 1.5f;     // 공격 범위
     [SerializeField] private float _attackInterval = 1.2f;  // 공격 간격
     [SerializeField] private float _moveSpeed = 5f;         // 이동 속도
-    [SerializeField] private float _health = 30f;           // 체력
+    [SerializeField] private float _maxHealth = 30f;        // 최대 체력
+    [SerializeField] private float _health;                 // 체력
 
     [Header("Effect")]
-    [SerializeField] private ParticleSystem _bloodEffectPrefab;
+    [SerializeField] private GameObject _bloodSprayPrefab;
 
     private float _attackTimer = 0f;
     private CharacterController _controller;
     private Vector3 _startPosition;
     private GameObject _player;
 
+    public float MaxHealth => _maxHealth;
+    public float Health => _health;
+
     private ZombieState _state = ZombieState.Idle;
 
     private void Start()
     {
+        _health = _maxHealth;
+
         _controller = GetComponent<CharacterController>();
         _startPosition = transform.position;
 
@@ -69,20 +75,24 @@ public class Zombie : MonoBehaviour, Idamageable
     }
 
     // 대미지를 받는다.
-    public void TakeDamage(float damage)
+    public void TakeDamage(DamageInfo damageInfo)
     {
         if (_state == ZombieState.Death)
         {
             return;
         }
 
-        _health -= damage;
+        _health -= damageInfo.Value;
 
         StopAllCoroutines();
 
         if (_health > 0f)
         {
             // Todo. 맞은 부위에 피 이펙트를 실행하고 싶다.
+            GameObject bloodSpray = Instantiate(_bloodSprayPrefab, transform);
+            // bloodSpray.transform.SetParent(transform);
+            bloodSpray.transform.position = damageInfo.HitPoint;
+            bloodSpray.transform.forward = damageInfo.HitNormal;
 
             // 잠깐 멈칫 하고 싶다
             Debug.Log($"{_state} -> Hit");
