@@ -14,6 +14,7 @@ public class MinimapCamera : MonoBehaviour
 
     private void Update()
     {
+        // Todo. ZoomIn/ZoomOut 함수로 분리
         if (Input.GetKeyDown(KeyCode.Alpha0))
         {
             _camera.orthographicSize -= 1f;
