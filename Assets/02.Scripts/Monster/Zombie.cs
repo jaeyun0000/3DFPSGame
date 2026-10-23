@@ -17,7 +17,7 @@ public enum ZombieState
     Death       // 죽음: 쓰러지고 잠시 뒤 사라진다.
 }
 
-public class Zombie : MonoBehaviour
+public class Zombie : MonoBehaviour, Idamageable
 {
     [Header("Stat")]
     [SerializeField] private float _detectDistance = 8f;    // 플레이어를 발견하는 거리
@@ -26,6 +26,9 @@ public class Zombie : MonoBehaviour
     [SerializeField] private float _attackInterval = 1.2f;  // 공격 간격
     [SerializeField] private float _moveSpeed = 5f;         // 이동 속도
     [SerializeField] private float _health = 30f;           // 체력
+
+    [Header("Effect")]
+    [SerializeField] private ParticleSystem _bloodEffectPrefab;
 
     private float _attackTimer = 0f;
     private CharacterController _controller;
@@ -79,6 +82,8 @@ public class Zombie : MonoBehaviour
 
         if (_health > 0f)
         {
+            // Todo. 맞은 부위에 피 이펙트를 실행하고 싶다.
+
             // 잠깐 멈칫 하고 싶다
             Debug.Log($"{_state} -> Hit");
             _state = ZombieState.Hit;
