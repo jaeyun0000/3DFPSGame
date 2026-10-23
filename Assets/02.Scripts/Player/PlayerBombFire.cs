@@ -17,6 +17,8 @@ public class PlayerBombFire : MonoBehaviour
 
     private void Update()
     {
+        if (GameManager.Instance.State != GameState.Playing) return;
+
         // 1. 마우스 오른쪽 버튼 입력 받기
         if (Input.GetButton("Fire2"))
         {

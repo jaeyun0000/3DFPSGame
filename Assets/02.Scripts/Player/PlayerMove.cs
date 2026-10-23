@@ -32,6 +32,8 @@ public class PlayerMove : MonoBehaviour
 
     private void Update()
     {
+        if (GameManager.Instance.State != GameState.Playing) return;
+
         // 0. 스태미나 회복
         _stamina = Mathf.Min(MaxStamina, _stamina + _staminaRecovery * Time.deltaTime);
 
