@@ -1,23 +1,27 @@
-using System.Collections;
+using System;
 using UnityEngine;
+using UnityEngine.Pool;
 
 // FSM(유한 상태 머신) : 유한개의 상태가 있고, 상태마다 행동을 다르게 함으로써 AI를 구현하는 유명한 방법
 // - "상태": 객체가 가질 수 있는 어떤 조건이나 상황
 // - "전이": 조건에 따라 현재 상태에서 다른 상태로 넘어가는 것
 // - 그리고 위 방식에 따라 규칙을 세워둔 것을 "머신"
+// 상태별 행동은 ZombieState이 담당하고, Zombie는 상태들이 사용할 기능을 제공한다.
 
 
 // 좀비가 가질 수 있는 상태
-public enum ZombieState
+public enum ZombieStateType
 {
-    Idle,       // 대기: 제자리에서 플레이어를 기다린다.
+    Idle,       // 대기: 제자리에서 잠시 쉰다.
+    Roam,       // 로밍: 처음 자리 주변을 돌아다닌다.
     Trace,      // 추격: 플레이어를 쫓아간다.
-    Comeback,    // 복귀: 처음 자리로 돌아간다.
+    Comeback,   // 복귀: 처음 자리로 돌아간다.
     Attack,     // 공격: 일정 시간마다 플레이어를 때린다.
     Hit,        // 피격: 공격(총알, 폭탄)을 받아 잠깐 멈칫한다.
     Death,      // 죽음: 쓰러지고 잠시 뒤 사라진다.
 }
 
+[RequireComponent(typeof(CharacterController))]
 public class Zombie : MonoBehaviour, IDamageable
 {
     [Header("스탯")]
@@ -28,201 +32,167 @@ public class Zombie : MonoBehaviour, IDamageable
     [SerializeField] private float _attackInterval = 1.2f;  // 공격 간격
     [SerializeField] private float _moveSpeed = 5;          // 이동속도
     [SerializeField] private float _maxHealth = 30;
-    [SerializeField] private float _health;
+
+    [Header("로밍")]
+    [SerializeField] private float _roamRadius = 5f;        // 처음 자리에서 돌아다니는 반경
+    [SerializeField] private float _minIdleTime = 1f;       // 로밍 전 최소 대기 시간
+    [SerializeField] private float _maxIdleTime = 3f;       // 로밍 전 최대 대기 시간
+
+    [Header("피격/사망")]
+    [SerializeField] private float _hitDuration = 0.3f;     // 피격 시 멈칫하는 시간
+    [SerializeField] private float _deathDuration = 0.5f;   // 쓰러진 뒤 사라질 때까지의 시간
 
     [Header("이펙트")]
     [SerializeField] private GameObject _bloodSprayPrefab;
 
-    private float _attackTimer = 0f;
+    private float _health;
     private CharacterController _controller;
     private Vector3 _startPosition;
-    private GameObject _player;
+    private Transform _player;
+
+    private ZombieState _state;
+
+    // 스포너에서 생성된 좀비만 풀을 가진다. (씬에 직접 배치한 좀비는 null)
+    private IObjectPool<Zombie> _pool;
 
     public float MaxHealth => _maxHealth;
     public float Health => _health;
+    public ZombieStateType State => _state.State;
 
+    public float DetectDistance => _detectDistance;
+    public float ComebackDistance => _combackDistance;
+    public float AttackRange => _attackRange;
+    public float AttackInterval => _attackInterval;
+    public float RoamRadius => _roamRadius;
+    public float HitDuration => _hitDuration;
+    public float DeathDuration => _deathDuration;
+    public Vector3 StartPosition => _startPosition;
 
-    private ZombieState _state = ZombieState.Idle;
+    // 체력이 바뀔 때 알린다. (옵저버 패턴)
+    public event Action OnHealthChanged;
 
-    private void Start()
+    private void Awake()
     {
-        _health = _maxHealth;
-
         _controller = GetComponent<CharacterController>();
+        _player = GameObject.FindGameObjectWithTag("Player").transform;
+
+        _state = new ZombieState(this);
+
+        _health = _maxHealth;
         _startPosition = transform.position;
-
-        // 게임을 시작하면 플레이어를 찾는다.
-        _player = GameObject.FindGameObjectWithTag("Player");
+        _state.ChangeState(ZombieStateType.Idle);
     }
-
 
     private void Update()
     {
         if (GameManager.Instance.State != GameState.Playing) return;
 
-        switch (_state)
-        {
-            case ZombieState.Idle:
-                Idle();
-                break;
+        _state.Update();
+    }
 
-            case ZombieState.Trace:
-                Trace();
-                break;
+    public void SetPool(IObjectPool<Zombie> pool)
+    {
+        _pool = pool;
+    }
 
-            case ZombieState.Comeback:
-                Comeback();
-                break;
+    // 풀에서 꺼낸 좀비를 지정한 위치에 새 좀비처럼 등장시킨다.
+    public void Spawn(Vector3 position)
+    {
+        // CharacterController가 켜져 있으면 위치 이동이 덮어써질 수 있어서 잠시 끈다.
+        _controller.enabled = false;
+        transform.position = position;
+        _controller.enabled = true;
 
-            case ZombieState.Attack:
-                Attack();
-                break;
-        }
+        _startPosition = position;
+        _health = _maxHealth;
+        OnHealthChanged?.Invoke();
+
+        _state.ChangeState(ZombieStateType.Idle);
     }
 
     // 대미지를 받는다.
     public void TakeDamage(DamageInfo damageInfo)
     {
-        if (_state == ZombieState.Death)
-        {
-            return;
-        }
+        if (State == ZombieStateType.Death) return;
 
         _health -= damageInfo.Value;
-
-        StopAllCoroutines();
+        OnHealthChanged?.Invoke();
 
         if (_health > 0f)
         {
             // 좀비의 자식으로 블러드 스프레이를 생성! -> 위치 수정!
             GameObject bloodSpray = Instantiate(_bloodSprayPrefab, transform);
-            //bloodSpray.transform.SetParent(transform);
             bloodSpray.transform.position = damageInfo.HitPoint;
             bloodSpray.transform.forward = damageInfo.HitNormal;
 
-            // 잠깐 멈칫 하고 싶다!
-            Debug.Log($"{_state} -> Hit");
-            _state = ZombieState.Hit;
-            StartCoroutine(Hit_Coroutine());
+            _state.ChangeState(ZombieStateType.Hit);
         }
         else
         {
-            Debug.Log($"{_state} -> Death");
-            _state = ZombieState.Death;
-            StartCoroutine(Death_Coroutine());
+            _state.ChangeState(ZombieStateType.Death);
         }
-
     }
 
-    private IEnumerator Hit_Coroutine()
+    public float GetDistanceToPlayer()
     {
-        yield return new WaitForSeconds(0.3f); // 잠깐 멈칫한다!
-
-        // 맞았으니 쫒아온다.
-        Debug.Log($"{_state} -> Trace");
-        _state = ZombieState.Trace;
+        return Vector3.Distance(transform.position, _player.position);
     }
 
-    private IEnumerator Death_Coroutine()
+    public float GetDistanceFromStart()
+    {
+        return Vector3.Distance(transform.position, _startPosition);
+    }
+
+    // 목표 지점을 바라보며 그 방향으로 이동한다. (높이는 무시)
+    public void MoveTowards(Vector3 targetPosition)
+    {
+        Vector3 direction = targetPosition - transform.position;
+        direction.y = 0f;
+        direction.Normalize();
+
+        transform.forward = direction;
+        _controller.SimpleMove(direction * _moveSpeed);
+    }
+
+    public void MoveTowardsPlayer()
+    {
+        MoveTowards(_player.position);
+    }
+
+    public void AttackPlayer()
+    {
+        // Todo. 공격 애니메이션 실행
+
+        DamageInfo info = new DamageInfo()
+        {
+            Value = _attackDamage,
+            HitPoint = _player.position,
+            HitNormal = (transform.position - _player.position).normalized,
+        };
+
+        _player.GetComponent<IDamageable>().TakeDamage(info);
+    }
+
+    public float GetRandomIdleTime()
+    {
+        return UnityEngine.Random.Range(_minIdleTime, _maxIdleTime);
+    }
+
+    public void DisableCollision()
     {
         _controller.enabled = false;
-        yield return new WaitForSeconds(0.5f);
-        Destroy(gameObject);
     }
 
-    // 대기: 제자리에서 플레이어를 기다린다.
-    private void Idle()
+    // 사망 처리가 끝나면 풀로 돌아가고, 풀이 없으면 파괴한다.
+    public void Despawn()
     {
-        // Todo. Idle 애니메이션 실행
-
-        // 플레이어 가까워지면 Trace 상태로 전이한다.
-        float distance = Vector3.Distance(transform.position, _player.transform.position);
-        if (distance <= _detectDistance)
+        if (_pool != null)
         {
-            Debug.Log($"{_state} -> Trace");
-            _state = ZombieState.Trace;
+            _pool.Release(this);
         }
-    }
-
-    // 추격: 플레이어를 쫓아간다.
-    private void Trace()
-    {
-        // Todo. Run 애니메이션 실행
-
-
-        // 처음 자리에서 너무 멀어지면 돌아간다.
-        if (Vector3.Distance(transform.position, _startPosition) > _combackDistance)
+        else
         {
-            Debug.Log($"{_state} -> Comeback");
-            _state = ZombieState.Comeback;
-            return;
-        }
-
-        // 플레이어가 공격 거리 안이면 공격한다.
-        if (Vector3.Distance(transform.position, _player.transform.position) <= _attackRange)
-        {
-            _attackTimer = 0f;
-            Debug.Log($"{_state} -> Attack");
-            _state = ZombieState.Attack;
-            return;
-        }
-
-
-        Vector3 direction = _player.transform.position - transform.position;
-        direction.y = 0f;
-        direction.Normalize();
-
-        transform.forward = direction;
-        _controller.SimpleMove(direction * _moveSpeed);
-    }
-
-    // 복귀: 처음 자리로 돌아간다.
-    private void Comeback()
-    {
-        // 처음 자리에 도착하면 Idle
-        if (Vector3.Distance(transform.position, _startPosition) < 1f)
-        {
-            Debug.Log($"{_state} -> Idle");
-            _state = ZombieState.Idle;
-            return;
-        }
-
-        // 처음 자리로 돌아간다
-        Vector3 direction = _startPosition - transform.position;
-        direction.y = 0f;
-        direction.Normalize();
-
-        transform.forward = direction;
-        _controller.SimpleMove(direction * _moveSpeed);
-    }
-
-    // 공격: 일정 시간마다 플레이어를 때린다.
-    private void Attack()
-    {
-        // 플레이어가 공격 사정 거리 밖으로 나가면 쫓아!
-        float distance = Vector3.Distance(transform.position, _player.transform.position);
-        if (distance > _attackRange)
-        {
-            Debug.Log($"{_state} -> Trace");
-            _state = ZombieState.Trace;
-        }
-
-        _attackTimer += Time.deltaTime;
-        if (_attackTimer >= _attackInterval)
-        {
-            // Todo. 공격 애니메이션 실행
-
-
-            DamageInfo info = new DamageInfo()
-            {
-                Value = _attackDamage,
-                HitPoint = _player.transform.position,
-                HitNormal = (transform.position - _player.transform.position).normalized,
-            };
-
-            _player.GetComponent<IDamageable>().TakeDamage(info);
-
-            _attackTimer = 0f;
+            Destroy(gameObject);
         }
     }
 }

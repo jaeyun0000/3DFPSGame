@@ -13,14 +13,24 @@ public class PlayerGunFire : MonoBehaviour
     [SerializeField] private int _maxBulletCount = 30;
     [SerializeField] private float _reloadingTime = 3f;
 
+    [Header("레이저")]
+    [SerializeField] private LineRenderer _laserLine;
+    [SerializeField] private Transform _laserStartPoint;     // 레이저가 시작되는 위치(총구)
+    [SerializeField] private float _laserDuration = 0.05f;   // 레이저가 보였다가 사라지는 시간
+
     private float _fireTimer = 0f;
     private int _bulletCount;
 
     private Coroutine _reloadCoroutine;
+    private Coroutine _laserCoroutine;
 
     private void Start()
     {
         _bulletCount = _maxBulletCount;
+
+        _laserLine.positionCount = 2;
+        _laserLine.useWorldSpace = true;
+        _laserLine.enabled = false;
     }
 
     private void Update()
@@ -63,6 +73,28 @@ public class PlayerGunFire : MonoBehaviour
         Debug.Log("재장전 완료");
     }
 
+    private void ShowLaser(Vector3 endPoint)
+    {
+        _laserLine.SetPosition(0, _laserStartPoint.position);
+        _laserLine.SetPosition(1, endPoint);
+        _laserLine.enabled = true;
+
+        // 연사 중이면 이전 레이저의 사라지는 시간을 새로 센다.
+        if (_laserCoroutine != null)
+        {
+            StopCoroutine(_laserCoroutine);
+        }
+        _laserCoroutine = StartCoroutine(HideLaser_Coroutine());
+    }
+
+    private IEnumerator HideLaser_Coroutine()
+    {
+        yield return new WaitForSeconds(_laserDuration);
+
+        _laserLine.enabled = false;
+        _laserCoroutine = null;
+    }
+
     private void Shoot()
     {
         // Ray: 레이저(시작위치, 날아갈 방향)
@@ -78,6 +110,11 @@ public class PlayerGunFire : MonoBehaviour
 
         // 4. 레이를 발사하고, 만일 부딛힐 물체가 있다면 이펙트 표시하기
         bool isHit = Physics.Raycast(ray, out hitInfo, _range);
+
+        // 맞으면 맞은 자리까지, 안 맞으면 사거리 끝까지 레이저를 그린다.
+        Vector3 laserEndPoint = isHit ? hitInfo.point : ray.GetPoint(_range);
+        ShowLaser(laserEndPoint);
+
         if (isHit)
         {
             // Debug.Log($"{hitInfo.collider.name}이 총알에 맞았다. 대미지: {_damage}");
