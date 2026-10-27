@@ -11,9 +11,10 @@ GameObject:
   - component: {fileID: 4128041215474151794}
   - component: {fileID: 3443987062756804475}
   - component: {fileID: 8820568584050328570}
-  - component: {fileID: 2669212568565754805}
   - component: {fileID: 6784875622796518850}
   - component: {fileID: 4036016595294120690}
+  - component: {fileID: 3071299523692632075}
+  - component: {fileID: 5870531209787018993}
   m_Layer: 9
   m_Name: Zombie
   m_TagString: Untagged
@@ -95,31 +96,6 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!143 &2669212568565754805
-CharacterController:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 518562441579577024}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 3
-  m_Height: 2
-  m_Radius: 0.5
-  m_SlopeLimit: 45
-  m_StepOffset: 0.3
-  m_SkinWidth: 0.08
-  m_MinMoveDistance: 0.001
-  m_Center: {x: 0, y: 0, z: 0}
 --- !u!114 &6784875622796518850
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -139,8 +115,13 @@ MonoBehaviour:
   _attackInterval: 1.2
   _moveSpeed: 5
   _maxHealth: 30
-  _health: 30
+  _roamRadius: 5
+  _minIdleTime: 1
+  _maxIdleTime: 3
+  _hitDuration: 0.3
+  _deathDuration: 0.5
   _bloodSprayPrefab: {fileID: 1000013355911406, guid: d32aa916f50cac94db11e6f19821a58f, type: 3}
+  _bloodSprayDuration: 0.5
 --- !u!114 &4036016595294120690
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -154,6 +135,51 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ZombieHealthBar
   _slider: {fileID: 8309776600059717040}
+--- !u!195 &3071299523692632075
+NavMeshAgent:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 518562441579577024}
+  m_Enabled: 1
+  m_AgentTypeID: 0
+  m_Radius: 0.5
+  m_Speed: 3.5
+  m_Acceleration: 8
+  avoidancePriority: 50
+  m_AngularSpeed: 120
+  m_StoppingDistance: 0.7
+  m_AutoTraverseOffMeshLink: 1
+  m_AutoBraking: 0
+  m_AutoRepath: 1
+  m_Height: 2
+  m_BaseOffset: 1
+  m_WalkableMask: 4294967295
+  m_ObstacleAvoidanceType: 4
+--- !u!136 &5870531209787018993
+CapsuleCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 518562441579577024}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Radius: 0.5
+  m_Height: 2
+  m_Direction: 1
+  m_Center: {x: 0, y: 0, z: 0}
 --- !u!1 &2024498892686164811
 GameObject:
   m_ObjectHideFlags: 0

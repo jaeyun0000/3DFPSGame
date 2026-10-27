@@ -71,6 +71,7 @@ public class ZombieState
         {
             case ZombieStateType.Idle:
                 // Todo. Idle 애니메이션 실행
+                _zombie.StopMoving();
                 _stateTimer = _zombie.GetRandomIdleTime();
                 break;
 
@@ -82,15 +83,19 @@ public class ZombieState
                 break;
 
             case ZombieStateType.Attack:
+                _zombie.StopMoving();
                 _attackTimer = 0f;
                 break;
 
             case ZombieStateType.Hit:
                 // 피격 중에 또 맞으면 멈칫 시간이 처음부터 다시 시작된다.
+                _zombie.StopMoving();
                 _stateTimer = _zombie.HitDuration;
                 break;
 
             case ZombieStateType.Death:
+                // 에이전트를 끄기 전에 멈춘다. (꺼진 에이전트에는 명령할 수 없다.)
+                _zombie.StopMoving();
                 _zombie.DisableCollision();
                 _stateTimer = _zombie.DeathDuration;
                 break;
@@ -141,8 +146,8 @@ public class ZombieState
     {
         // Todo. Run 애니메이션 실행
 
-        // 처음 자리에서 너무 멀어지면 돌아간다.
-        if (_zombie.GetDistanceFromStart() > _zombie.ComebackDistance)
+        // 추격 중에는 집과의 거리와 상관없이 계속 따라가고, 플레이어가 추격 범위를 벗어나면 돌아간다.
+        if (_zombie.GetDistanceToPlayer() > _zombie.TraceDistance)
         {
             ChangeState(ZombieStateType.Comeback);
             return;
@@ -162,7 +167,9 @@ public class ZombieState
     private void UpdateComeback()
     {
         // 처음 자리에 도착하면 Idle
-        if (_zombie.GetDistanceFromStart() < ComebackArriveDistance)
+        // 에이전트는 stoppingDistance만큼 떨어진 곳에서 멈추므로, 그보다 작은 거리로 판정하면 영원히 도착하지 못한다.
+        float arriveDistance = Mathf.Max(ComebackArriveDistance, _zombie.StoppingDistance);
+        if (_zombie.GetDistanceFromStart() <= arriveDistance)
         {
             ChangeState(ZombieStateType.Idle);
             return;
