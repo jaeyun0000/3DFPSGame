@@ -15,7 +15,8 @@ public class Player : MonoBehaviour, IDamageable
 
     [SerializeField] private UI_HitEffect _uiHitEffect;
 
-    private void Start()
+    // UI가 Start에서 처음 체력을 읽어가므로, 그보다 먼저 실행되는 Awake에서 초기화한다.
+    private void Awake()
     {
         _health = _maxHealth;
     }

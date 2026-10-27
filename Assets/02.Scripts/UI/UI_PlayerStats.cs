@@ -13,6 +13,9 @@ public class UI_PlayerStats : MonoBehaviour
     private void Start()
     {
         _player.OnDamaged += RefreshHealth;
+
+        // 이벤트는 맞을 때만 오므로, 시작할 때 한 번 직접 그려준다.
+        RefreshHealth();
     }
 
 
