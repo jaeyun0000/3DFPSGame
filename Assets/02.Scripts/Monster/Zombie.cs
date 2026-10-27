@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Pool;
 
@@ -44,6 +45,7 @@ public class Zombie : MonoBehaviour, IDamageable
 
     [Header("이펙트")]
     [SerializeField] private GameObject _bloodSprayPrefab;
+    [SerializeField] private float _bloodSprayDuration = 0.5f;  // 피 이펙트가 남아 있는 시간
 
     private float _health;
     private CharacterController _controller;
@@ -54,6 +56,9 @@ public class Zombie : MonoBehaviour, IDamageable
 
     // 스포너에서 생성된 좀비만 풀을 가진다. (씬에 직접 배치한 좀비는 null)
     private IObjectPool<Zombie> _pool;
+
+    // 풀에서 다시 꺼낼 때 남은 피를 지우기 위해 생성한 피 이펙트를 기억한다.
+    private readonly List<GameObject> _bloodSprays = new List<GameObject>();
 
     public float MaxHealth => _maxHealth;
     public float Health => _health;
@@ -107,6 +112,8 @@ public class Zombie : MonoBehaviour, IDamageable
         _health = _maxHealth;
         OnHealthChanged?.Invoke();
 
+        ClearBloodSprays();
+
         _state.ChangeState(ZombieStateType.Idle);
     }
 
@@ -120,10 +127,7 @@ public class Zombie : MonoBehaviour, IDamageable
 
         if (_health > 0f)
         {
-            // 좀비의 자식으로 블러드 스프레이를 생성! -> 위치 수정!
-            GameObject bloodSpray = Instantiate(_bloodSprayPrefab, transform);
-            bloodSpray.transform.position = damageInfo.HitPoint;
-            bloodSpray.transform.forward = damageInfo.HitNormal;
+            SpawnBloodSpray(damageInfo);
 
             _state.ChangeState(ZombieStateType.Hit);
         }
@@ -131,6 +135,34 @@ public class Zombie : MonoBehaviour, IDamageable
         {
             _state.ChangeState(ZombieStateType.Death);
         }
+    }
+
+    // 좀비의 자식으로 블러드 스프레이를 생성하고, 지속 시간이 지나면 제거한다.
+    // (이펙트가 반복 재생으로 설정되어 있어서 직접 지우지 않으면 계속 피가 나온다.)
+    private void SpawnBloodSpray(DamageInfo damageInfo)
+    {
+        // 이미 지워진 이펙트는 Unity에서 null로 판정되므로 리스트에서 정리한다.
+        _bloodSprays.RemoveAll(spray => spray == null);
+
+        GameObject bloodSpray = Instantiate(_bloodSprayPrefab, transform);
+        bloodSpray.transform.position = damageInfo.HitPoint;
+        bloodSpray.transform.forward = damageInfo.HitNormal;
+
+        _bloodSprays.Add(bloodSpray);
+        Destroy(bloodSpray, _bloodSprayDuration);
+    }
+
+    // 남아 있는 블러드 스프레이를 모두 제거한다.
+    private void ClearBloodSprays()
+    {
+        foreach (GameObject bloodSpray in _bloodSprays)
+        {
+            if (bloodSpray != null)
+            {
+                Destroy(bloodSpray);
+            }
+        }
+        _bloodSprays.Clear();
     }
 
     public float GetDistanceToPlayer()
