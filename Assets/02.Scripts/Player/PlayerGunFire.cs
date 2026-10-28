@@ -49,17 +49,16 @@ public class PlayerGunFire : MonoBehaviour
 
         // 1. 마우스 왼쪽 버튼 입력 받기
         bool isMouseVisible = Cursor.visible;
-        if (!isMouseVisible && Input.GetButton("Fire1") && _fireTimer <= 0f & _bulletCount > 0)
+        bool isFiring = !isMouseVisible && Input.GetButton("Fire1") && _bulletCount > 0;
+
+        // 쏘는 동안 상체(Fire Layer)만 쏘는 동작을 한다. 연사 간격 사이에도 켜 둬야 동작이 끊기지 않는다.
+        _animator.SetBool("Fire", isFiring);
+
+        if (isFiring && _fireTimer <= 0f)
         {
             _bulletCount--;
             _fireTimer = _fireInterval;
             Shoot();
-
-            // 서 있을 때(MoveMotion이 0)만 쏘는 동작을 한다.
-            if (_animator.GetFloat("MoveMotion") == 0f)
-            {
-                _animator.SetTrigger("Attack");
-            }
 
             // 이 방식은: 이 모노비헤어비어가 등록한 모든 코루틴을 실행 취소;
             //StopAllCoroutines();

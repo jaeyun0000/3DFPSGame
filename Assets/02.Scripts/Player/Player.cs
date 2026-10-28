@@ -15,9 +15,15 @@ public class Player : MonoBehaviour, IDamageable
 
     [SerializeField] private UI_HitEffect _uiHitEffect;
 
+    private Animator _animator;
+    private int _injuredLayerIndex;
+
     // UI가 Start에서 처음 체력을 읽어가므로, 그보다 먼저 실행되는 Awake에서 초기화한다.
     private void Awake()
     {
+        _animator = GetComponentInChildren<Animator>();
+        _injuredLayerIndex = _animator.GetLayerIndex("Injured Layer");
+
         _health = _maxHealth;
     }
 
@@ -26,6 +32,11 @@ public class Player : MonoBehaviour, IDamageable
         if (_health <= 0f) return;
 
         _health -= damageInfo.Value;
+
+        // 체력에 따라 Injured Layer의 가중ㅇ치를 바꿔준다.
+        float healthPercent = _health / _maxHealth; // 0 ~ 1;
+        float injured = Mathf.InverseLerp(0.5f, 0f, healthPercent);
+        _animator.SetLayerWeight(_injuredLayerIndex, injured);
 
         OnDamaged?.Invoke();
 
