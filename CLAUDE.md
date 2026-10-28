@@ -47,7 +47,7 @@ dotnet format 3DFPSGame.slnx --severity warn --include Assets/02.Scripts/
 ## 아키텍처
 
 ### 게임 상태 게이트
-`GameManager`는 정적 `Instance`를 가진 싱글턴으로, `GameState`(`Ready`, `Playing`, `GameOber`)를 관리한다. `GameOber`는 오타지만 기존 식별자다.
+`GameManager`는 정적 `Instance`를 가진 싱글턴으로, `GameState`(`Ready`, `Playing`, `GameOver`)를 관리한다.
 시작 시퀀스 코루틴("준비" → "시작")이 끝나야 `Playing`이 된다. **입력이나 AI를 처리하는 모든 `Update()`는 첫 줄에서 `GameManager.Instance.State != GameState.Playing`이면 리턴한다.** 새 게임플레이 스크립트도 이 패턴을 따라야 한다.
 
 ### 대미지 시스템

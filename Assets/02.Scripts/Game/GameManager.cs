@@ -6,7 +6,7 @@ public enum GameState
 {
     Ready,
     Playing,
-    GameOber
+    GameOver
 }
 
 public class GameManager : MonoBehaviour
@@ -18,6 +18,7 @@ public class GameManager : MonoBehaviour
     public GameState State => _state;
 
     [SerializeField] private TextMeshProUGUI _stateText;
+    [SerializeField] private Animator _playerAnimator;      // 게임 오버 때 군인을 서 있는 동작으로 돌린다.
 
     private void Awake()
     {
@@ -49,10 +50,12 @@ public class GameManager : MonoBehaviour
 
     public void GameOver()
     {
-        _state = GameState.GameOber;
+        _state = GameState.GameOver;
 
         _stateText.gameObject.SetActive(true);
         _stateText.text = "게임오버";
         _stateText.color = Color.red;
+
+        _playerAnimator.SetFloat("MoveMotion", 0f);  // 달리던 중이었어도 서 있는 동작으로 돌린다.
     }
 }
