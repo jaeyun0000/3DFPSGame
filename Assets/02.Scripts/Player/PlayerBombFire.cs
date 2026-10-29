@@ -21,6 +21,8 @@ public class PlayerBombFire : MonoBehaviour
 
     private Animator _animator;  // 군인 모델의 애니메이터
 
+    private Player _player;
+
     private void Awake()
     {
         _animator = GetComponentInChildren<Animator>();
@@ -38,11 +40,20 @@ public class PlayerBombFire : MonoBehaviour
     private void Start()
     {
         _currentThrowPower = _throwPower;
+
+        _player = GetComponent<Player>();
     }
 
     private void Update()
     {
         if (GameManager.Instance.State != GameState.Playing) return;
+
+        // 일반 모드가 아니면 폭탄을 던지지 않는다. 모으던 힘도 버린다.
+        if (_player.WeaponMode != WeaponMode.Normal)
+        {
+            _currentThrowPower = _throwPower;
+            return;
+        }
 
         // 1. 마우스 오른쪽 버튼 입력 받기
         if (Input.GetButton("Fire2"))
