@@ -19,6 +19,8 @@ public class PlayerGunFire : MonoBehaviour
     [SerializeField] private Transform _laserStartPoint;     // 레이저가 시작되는 위치(총구)
     [SerializeField] private float _laserDuration = 0.05f;   // 레이저가 보였다가 사라지는 시간
 
+    [SerializeField] private GameObject[] _muzzleFlashes;
+    [SerializeField] private float _flashTime = 0.05f;
     private float _fireTimer = 0f;
     private int _bulletCount;
 
@@ -119,6 +121,8 @@ public class PlayerGunFire : MonoBehaviour
 
     private void Shoot()
     {
+        StartCoroutine(MuzzleFlash_Coroutine());
+
         // Ray: 레이저(시작위치, 날아갈 방향)
         // Physics.RayCast: 레이저를 발사
         // RayCastHit: 레이저가 물체와 부닫히면 그 정보를 저장하는 구조체
@@ -168,5 +172,19 @@ public class PlayerGunFire : MonoBehaviour
 
             // hitInfo.collider.GetComponent<Box>()?.TakeDamage(_damage);
         }
+    }
+
+    private IEnumerator MuzzleFlash_Coroutine()
+    {
+        // Inspector에서 총구 불꽃을 연결하지 않았으면 그냥 넘어간다.
+        if (_muzzleFlashes.Length == 0) yield break;
+
+        int randomIndex = UnityEngine.Random.Range(0, _muzzleFlashes.Length);
+        GameObject flash = _muzzleFlashes[randomIndex];
+        flash.SetActive(true);
+
+        yield return new WaitForSeconds(_flashTime);
+
+        flash.SetActive(false);
     }
 }
