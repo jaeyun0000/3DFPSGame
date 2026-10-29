@@ -4166,6 +4166,7 @@ GameObject:
   - component: {fileID: 1878405135}
   - component: {fileID: 1878405137}
   - component: {fileID: 1878405138}
+  - component: {fileID: 1878405140}
   - component: {fileID: 1878405136}
   m_Layer: 7
   m_Name: Player
@@ -4361,6 +4362,18 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Player
   _maxHealth: 100
   _uiHitEffect: {fileID: 1483027727}
+--- !u!114 &1878405140
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1878405129}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dfcffcae599ca3644b6f534d801cd190, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerZoom
 --- !u!1 &1882147832
 GameObject:
   m_ObjectHideFlags: 0
