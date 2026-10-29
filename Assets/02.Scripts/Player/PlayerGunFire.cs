@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using UnityEngine;
 
@@ -26,15 +27,22 @@ public class PlayerGunFire : MonoBehaviour
 
     private Animator _animator;  // 군인 모델의 애니메이터
 
+    public int BulletCount => _bulletCount;
+    public int MaxBulletCount => _maxBulletCount;
+
+    // 총알 수가 바뀌면 (현재 총알 수, 탄창 크기)를 알려준다.
+    public event Action<int, int> OnBulletCountChanged;
+
+    // UI가 Start에서 처음 총알 수를 읽어가므로, 그보다 먼저 실행되는 Awake에서 초기화한다.
     private void Awake()
     {
         _animator = GetComponentInChildren<Animator>();
+
+        _bulletCount = _maxBulletCount;
     }
 
     private void Start()
     {
-        _bulletCount = _maxBulletCount;
-
         _laserLine.positionCount = 2;
         _laserLine.useWorldSpace = true;
         _laserLine.enabled = false;
@@ -57,6 +65,7 @@ public class PlayerGunFire : MonoBehaviour
         if (isFiring && _fireTimer <= 0f)
         {
             _bulletCount--;
+            OnBulletCountChanged?.Invoke(_bulletCount, _maxBulletCount);
             _fireTimer = _fireInterval;
             Shoot();
 
@@ -82,6 +91,7 @@ public class PlayerGunFire : MonoBehaviour
         yield return new WaitForSeconds(_reloadingTime);
 
         _bulletCount = _maxBulletCount;
+        OnBulletCountChanged?.Invoke(_bulletCount, _maxBulletCount);
         Debug.Log("재장전 완료");
     }
 

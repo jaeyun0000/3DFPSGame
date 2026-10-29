@@ -16,6 +16,9 @@ public class Player : MonoBehaviour, IDamageable
     // Action 자료향: 함수(들)를 저장할 수 있다.
     public event Action OnDamaged;
 
+    // 무기 모드가 바뀌면 바뀐 모드를 알려준다.
+    public event Action<WeaponMode> OnWeaponModeChanged;
+
     [SerializeField] private UI_HitEffect _uiHitEffect;
 
     private Animator _animator;
@@ -37,12 +40,21 @@ public class Player : MonoBehaviour, IDamageable
         // 숫자 키 1은 일반 모드, 2는 저격 모드;
         if (Input.GetKeyDown(KeyCode.Alpha1))
         {
-            _weaponMode = WeaponMode.Normal;
+            ChangeWeaponMode(WeaponMode.Normal);
         }
         else if (Input.GetKeyDown(KeyCode.Alpha2))
         {
-            _weaponMode = WeaponMode.Sniper;
+            ChangeWeaponMode(WeaponMode.Sniper);
         }
+    }
+
+    private void ChangeWeaponMode(WeaponMode weaponMode)
+    {
+        // 같은 모드를 다시 고르면 알리지 않는다.
+        if (_weaponMode == weaponMode) return;
+
+        _weaponMode = weaponMode;
+        OnWeaponModeChanged?.Invoke(_weaponMode);
     }
 
     public void TakeDamage(DamageInfo damageInfo)

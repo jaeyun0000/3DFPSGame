@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using UnityEngine.Pool;
 
@@ -23,6 +24,11 @@ public class PlayerBombFire : MonoBehaviour
 
     private Player _player;
 
+    public int BombCount => _bombCount;
+
+    // 폭탄 수가 바뀌면 남은 폭탄 수를 알려준다.
+    public event Action<int> OnBombCountChanged;
+
     private void Awake()
     {
         _animator = GetComponentInChildren<Animator>();
@@ -35,13 +41,13 @@ public class PlayerBombFire : MonoBehaviour
             collectionCheck: true,
             defaultCapacity: _poolSize,
             maxSize: _poolSize);
+
+        _player = GetComponent<Player>();
     }
 
     private void Start()
     {
         _currentThrowPower = _throwPower;
-
-        _player = GetComponent<Player>();
     }
 
     private void Update()
@@ -81,6 +87,7 @@ public class PlayerBombFire : MonoBehaviour
             _animator.SetTrigger(ThrowHash);
 
             _bombCount--;
+            OnBombCountChanged?.Invoke(_bombCount);
         }
     }
 
