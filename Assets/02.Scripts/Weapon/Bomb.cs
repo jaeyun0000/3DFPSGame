@@ -24,7 +24,8 @@ public class Bomb : MonoBehaviour
     }
 
     // 풀에서 꺼낸 폭탄을 발사 위치에서 던진다.
-    public void Throw(Vector3 position, Vector3 force)
+    // torque: 날아가는 동안 빙글빙글 돌게 하는 회전력
+    public void Throw(Vector3 position, Vector3 force, Vector3 torque)
     {
         _isExploded = false;
 
@@ -34,6 +35,7 @@ public class Bomb : MonoBehaviour
         _rigidbody.angularVelocity = Vector3.zero;
 
         _rigidbody.AddForce(force, ForceMode.Impulse);
+        _rigidbody.AddTorque(torque, ForceMode.Impulse);
     }
 
     // 다른 콜라이더와 부딛힌 순간 실행되는 메서드

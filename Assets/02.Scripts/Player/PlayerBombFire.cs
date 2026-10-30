@@ -13,6 +13,7 @@ public class PlayerBombFire : MonoBehaviour
     [SerializeField] private float _throwPower = 15f;
     [SerializeField] private float _throwPowerUp = 2f;
     [SerializeField] private float _currentThrowPower = 0f;
+    [SerializeField] private float _spinPower = 0.4f;   // 던질 때 주는 회전력 (폭탄이 가벼워서 작은 값으로도 빙글빙글 돈다)
     [SerializeField] private int _bombCount = 10;
 
     [Header("오브젝트 풀")]
@@ -80,8 +81,10 @@ public class PlayerBombFire : MonoBehaviour
             // 2. 풀에서 수류탄을 꺼내서
             Bomb bomb = _bombPool.Get();
 
-            // 3. 발사 위치에서 시선 방향으로 던지기
-            bomb.Throw(_firePoint.position, Camera.main.transform.forward * _currentThrowPower);
+            // 3. 발사 위치에서 시선 방향으로 던지고, 무작위 방향으로 회전시키기
+            Vector3 force = Camera.main.transform.forward * _currentThrowPower;
+            Vector3 torque = UnityEngine.Random.onUnitSphere * _spinPower;
+            bomb.Throw(_firePoint.position, force, torque);
 
             // 4. 오른팔만 던지는 동작을 한다. (ThrowLayer가 RightArmMask로 오른팔만 덮는다.)
             _animator.SetTrigger(ThrowHash);

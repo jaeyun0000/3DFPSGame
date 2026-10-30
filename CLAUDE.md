@@ -83,6 +83,5 @@ dotnet format 3DFPSGame.slnx --severity warn --include Assets/02.Scripts/
 
 ## Unity 작업 시 주의
 
-- `.unity`, `.prefab`, `.asset` 같은 YAML 에셋은 직접 편집하지 않는다. 씬 배치와 Inspector 참조 연결은 사용자에게 에디터 작업으로 안내한다.
 - 스크립트를 새로 만들면 Unity가 `.meta`를 생성하므로 `.meta` 파일도 함께 커밋해야 한다.
 - `Assets/Workshop/`, `Assets/BloodDecalsAndEffects/`, `Assets/TextMesh Pro/`, `Assets/TutorialInfo/`는 외부 에셋이나 템플릿이다. 수정 대상이 아니다.

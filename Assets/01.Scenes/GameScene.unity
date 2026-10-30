@@ -2595,6 +2595,23 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 51b76f616384d4946bed4ecc9a6c2c3e, type: 3}
+--- !u!1 &921196420 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: 9804effd106b2cb41a8a65a33f9923cb, type: 3}
+  m_PrefabInstance: {fileID: 1249225318}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &921196422
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 921196420}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 75097af64630f044389909b04176ae1c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerMeleeEvent
 --- !u!1001 &1123229766
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -3190,7 +3207,10 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 2890340462180134544, guid: 9804effd106b2cb41a8a65a33f9923cb, type: 3}
       insertIndex: -1
       addedObject: {fileID: 297380452}
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 9804effd106b2cb41a8a65a33f9923cb, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 921196422}
   m_SourcePrefab: {fileID: 100100000, guid: 9804effd106b2cb41a8a65a33f9923cb, type: 3}
 --- !u!1 &1250555097
 GameObject:
@@ -4909,7 +4929,10 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
-    m_AddedGameObjects: []
+    m_AddedGameObjects:
+    - targetCorrespondingSourceObject: {fileID: -8679921383154817045, guid: b565f506c37a3f54da0dd933d25c8a3b, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 2108117074}
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: b565f506c37a3f54da0dd933d25c8a3b, type: 3}
 --- !u!1 &1797319191
@@ -5120,6 +5143,7 @@ GameObject:
   - component: {fileID: 1878405137}
   - component: {fileID: 1878405138}
   - component: {fileID: 1878405140}
+  - component: {fileID: 1878405141}
   - component: {fileID: 1878405136}
   m_Layer: 7
   m_Name: Player
@@ -5307,6 +5331,7 @@ MonoBehaviour:
   _throwPower: 15
   _throwPowerUp: 2
   _currentThrowPower: 0
+  _spinPower: 0.4
   _bombCount: 10
   _poolSize: 10
 --- !u!114 &1878405139
@@ -5338,6 +5363,19 @@ MonoBehaviour:
   _sniperZoom: {fileID: 1491009957}
   _normalPov: 60
   _sniperPov: 15
+--- !u!114 &1878405141
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1878405129}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 24753856eae32f84c8621a4e25db8798, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerMeleeAttack
+  _katanaCollider: {fileID: 2108117077}
 --- !u!1 &1882147832
 GameObject:
   m_ObjectHideFlags: 0
@@ -6131,6 +6169,101 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2063862805}
   m_CullTransparentMesh: 1
+--- !u!1 &2108117073
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2108117074}
+  - component: {fileID: 2108117077}
+  - component: {fileID: 2108117076}
+  - component: {fileID: 2108117075}
+  m_Layer: 2
+  m_Name: Blade
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2108117074
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2108117073}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0.9323868, z: 0, w: 0.361462}
+  m_LocalPosition: {x: 0.1, y: -0, z: -0.127}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 297380452}
+  m_LocalEulerAnglesHint: {x: 0, y: 137.62, z: 0}
+--- !u!114 &2108117075
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2108117073}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b93a1d074dd0ed744abea4ef500c67c9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Katana
+  _damage: 25
+--- !u!54 &2108117076
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2108117073}
+  serializedVersion: 5
+  m_Mass: 1
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 0
+  m_IsKinematic: 1
+  m_Interpolate: 0
+  m_Constraints: 0
+  m_CollisionDetection: 0
+--- !u!65 &2108117077
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2108117073}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 0.1, y: 0.1, z: 1}
+  m_Center: {x: 0, y: 0, z: 0}
 --- !u!1 &7100000100
 GameObject:
   m_ObjectHideFlags: 0
