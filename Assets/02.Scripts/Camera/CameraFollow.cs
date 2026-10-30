@@ -6,11 +6,11 @@ public enum CameraViewMode
     FirstPerson,    // 1인칭: 플레이어 머리에서 마우스로 둘러본다.
     ThirdPerson,    // 3인칭: 플레이어 뒤에서 마우스로 둘러본다. (위아래 포함)
     QuarterView,    // 쿼터뷰: 비스듬히 위에서 고정된 각도로 내려다본다.
-    BackView,       // 빽뷰: 플레이어 바로 뒤에서 고정된 각도로 따라간다.
+    BackView,       // 빽뷰: 플레이어 등 정중앙 뒤에서 마우스로 둘러본다. (위아래 포함, 3인칭보다 멀리)
 }
 
 // 시점에 맞춰 카메라 위치를 옮긴다.
-// 1인칭과 3인칭의 회전은 CameraRotate가 마우스로 정하고, 쿼터뷰와 빽뷰는 여기서 직접 정한다.
+// 회전은 CameraRotate가 마우스로 정하고, 쿼터뷰만 여기서 고정된 각도로 정한다.
 public class CameraFollow : MonoBehaviour
 {
     private const int ViewModeCount = 4;
@@ -29,8 +29,7 @@ public class CameraFollow : MonoBehaviour
 
     [Header("빽뷰")]
     [SerializeField] private float _backDistance = 5f;
-    [SerializeField] private float _backHeight = 2f;
-    [SerializeField] private float _backPitch = 15f;           // 아래로 내려다보는 각도
+    [SerializeField] private float _backHeight = 1f;           // 화면 가운데(조준점)를 플레이어가 가리지 않도록 머리보다 이만큼 위에서 본다.
 
     private Transform _player;
     private int _collisionLayerMask;   // 카메라가 막히는 레이어 (플레이어, 좀비는 통과)
@@ -38,12 +37,12 @@ public class CameraFollow : MonoBehaviour
     public CameraViewMode ViewMode => _viewMode;
 
     // 총과 폭탄이 날아갈 방향
-    // 1인칭, 3인칭은 화면 가운데를 향하고, 마우스로 위아래를 보지 않는 쿼터뷰와 빽뷰는 플레이어가 바라보는 방향으로 쏜다.
+    // 화면 가운데를 향하고, 마우스로 위아래를 보지 않는 쿼터뷰만 플레이어가 바라보는 방향으로 쏜다.
     public Ray AimRay
     {
         get
         {
-            if (_viewMode == CameraViewMode.QuarterView || _viewMode == CameraViewMode.BackView)
+            if (_viewMode == CameraViewMode.QuarterView)
             {
                 return new Ray(_target.position, _player.forward);
             }
@@ -97,9 +96,9 @@ public class CameraFollow : MonoBehaviour
                 break;
 
             case CameraViewMode.BackView:
-                transform.rotation = Quaternion.Euler(_backPitch, _player.eulerAngles.y, 0f);
-                Vector3 backPivot = _player.position + Vector3.up * _backHeight;
-                transform.position = GetBlockedPosition(backPivot, -_player.forward, _backDistance);
+                // 3인칭과 같이 뒤로 물러나되, 어깨가 아니라 등 정중앙 위에서 더 멀리 본다.
+                Vector3 backPivot = _target.position + Vector3.up * _backHeight;
+                transform.position = GetBlockedPosition(backPivot, -transform.forward, _backDistance);
                 break;
         }
     }
