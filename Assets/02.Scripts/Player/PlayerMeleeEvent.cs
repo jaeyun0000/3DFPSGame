@@ -20,4 +20,9 @@ public class PlayerMeleeEvent : MonoBehaviour
     {
         _meleeAttack.DeactivateCollider();
     }
+
+    public void FanAttack()
+    {
+        _meleeAttack.FanAttack();
+    }
 }

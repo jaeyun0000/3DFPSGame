@@ -16,7 +16,8 @@ public class PlayerGunFire : MonoBehaviour
 
     [Header("레이저")]
     [SerializeField] private LineRenderer _laserLine;
-    [SerializeField] private Transform _laserStartPoint;     // 레이저가 시작되는 위치(총구)
+    [SerializeField] private Transform _laserStartPoint;     // 1인칭에서 총알이 나가는 위치(화면 오른쪽 아래 총구)
+    [SerializeField] private Transform _playerMuzzle;        // 1인칭이 아닐 때 총알이 나가는 위치(플레이어 손)
     [SerializeField] private float _laserDuration = 0.05f;   // 레이저가 보였다가 사라지는 시간
 
     [SerializeField] private GameObject[] _muzzleFlashes;
@@ -101,9 +102,9 @@ public class PlayerGunFire : MonoBehaviour
         Debug.Log("재장전 완료");
     }
 
-    private void ShowLaser(Vector3 endPoint)
+    private void ShowLaser(Vector3 startPoint, Vector3 endPoint)
     {
-        _laserLine.SetPosition(0, _laserStartPoint.position);
+        _laserLine.SetPosition(0, startPoint);
         _laserLine.SetPosition(1, endPoint);
         _laserLine.enabled = true;
 
@@ -132,18 +133,21 @@ public class PlayerGunFire : MonoBehaviour
         // RayCastHit: 레이저가 물체와 부닫히면 그 정보를 저장하는 구조체
 
         // 2. 레이(광선)을 생성하고 발사될 위치와 진행 방향 설정하기
-        //    (1인칭, 3인칭은 화면 가운데, 쿼터뷰와 빽뷰는 플레이어가 바라보는 방향)
-        Ray ray = _cameraFollow.AimRay;
+        //    조준점은 카메라가 정하고(화면 가운데), 총알은 총구에서 그 조준점을 향해 나간다.
+        Vector3 muzzlePosition = GetMuzzlePosition();
+        Vector3 aimPoint = GetAimPoint(muzzlePosition);
+        Ray ray = new Ray(muzzlePosition, (aimPoint - muzzlePosition).normalized);
 
         // 3. 레이가 부딛힌 대상의 정보를 저장할 변수 생성하기
         RaycastHit hitInfo = new RaycastHit();
 
         // 4. 레이를 발사하고, 만일 부딛힐 물체가 있다면 이펙트 표시하기
+        //    총구와 조준점 사이에 벽이 있으면 벽에 맞는다.
         bool isHit = Physics.Raycast(ray, out hitInfo, _range, _hitLayerMask);
 
         // 맞으면 맞은 자리까지, 안 맞으면 사거리 끝까지 레이저를 그린다.
         Vector3 laserEndPoint = isHit ? hitInfo.point : ray.GetPoint(_range);
-        ShowLaser(laserEndPoint);
+        ShowLaser(muzzlePosition, laserEndPoint);
 
         if (isHit)
         {
@@ -176,6 +180,29 @@ public class PlayerGunFire : MonoBehaviour
 
             // hitInfo.collider.GetComponent<Box>()?.TakeDamage(_damage);
         }
+    }
+
+    // 1인칭은 화면에 보이는 총구, 다른 시점은 플레이어 손에서 쏜다.
+    private Vector3 GetMuzzlePosition()
+    {
+        if (_cameraFollow.ViewMode == CameraViewMode.FirstPerson) return _laserStartPoint.position;
+        return _playerMuzzle.position;
+    }
+
+    // 조준 방향(화면 가운데)이 가리키는 곳. 아무것도 없으면 사거리 끝을 조준한다.
+    private Vector3 GetAimPoint(Vector3 muzzlePosition)
+    {
+        Ray aimRay = _cameraFollow.AimRay;
+
+        // 3인칭처럼 카메라가 플레이어 뒤에 있으면, 카메라와 총구 사이에 있는 물체를 조준하지 않도록 총구 높이부터 검사한다.
+        float skipDistance = Mathf.Max(0f, Vector3.Dot(muzzlePosition - aimRay.origin, aimRay.direction));
+        aimRay.origin += aimRay.direction * skipDistance;
+
+        if (Physics.Raycast(aimRay, out RaycastHit aimHit, _range, _hitLayerMask))
+        {
+            return aimHit.point;
+        }
+        return aimRay.GetPoint(_range);
     }
 
     private IEnumerator MuzzleFlash_Coroutine()

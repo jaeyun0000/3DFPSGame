@@ -306,6 +306,37 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 72178714}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!1 &86480140
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 86480141}
+  m_Layer: 0
+  m_Name: GunMuzzle
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &86480141
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 86480140}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0.04398696, y: 0.18851529, z: 0.05027099}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1267403697}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &129734866
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -893,7 +924,7 @@ Camera:
   m_Depth: -1
   m_CullingMask:
     serializedVersion: 2
-    m_Bits: 1015
+    m_Bits: 3063
   m_RenderingPath: -1
   m_TargetTexture: {fileID: 0}
   m_TargetDisplay: 0
@@ -978,6 +1009,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CameraRotate
   _rotationSpeed: 200
+  _followMinY: -40
+  _followMaxY: 60
 --- !u!114 &330585549
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2124,7 +2157,7 @@ Camera:
   m_Depth: 0
   m_CullingMask:
     serializedVersion: 2
-    m_Bits: 1399
+    m_Bits: 3447
   m_RenderingPath: -1
   m_TargetTexture: {fileID: 8400000, guid: 272a9cc84c9228a4cbea5c103b3e9cc3, type: 2}
   m_TargetDisplay: 0
@@ -2163,7 +2196,7 @@ GameObject:
   - component: {fileID: 791673125}
   - component: {fileID: 791673124}
   - component: {fileID: 791673123}
-  m_Layer: 0
+  m_Layer: 11
   m_Name: Wall
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3214,6 +3247,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 2890340462180134544, guid: 9804effd106b2cb41a8a65a33f9923cb, type: 3}
       insertIndex: -1
       addedObject: {fileID: 297380452}
+    - targetCorrespondingSourceObject: {fileID: 2890340462180134544, guid: 9804effd106b2cb41a8a65a33f9923cb, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 86480141}
     m_AddedComponents:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 9804effd106b2cb41a8a65a33f9923cb, type: 3}
       insertIndex: -1
@@ -5464,6 +5500,7 @@ MonoBehaviour:
   _reloadingTime: 3
   _laserLine: {fileID: 7100000202}
   _laserStartPoint: {fileID: 7100000201}
+  _playerMuzzle: {fileID: 86480141}
   _laserDuration: 0.05
   _muzzleFlashes:
   - {fileID: 636617181}
@@ -5535,6 +5572,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlayerMeleeAttack
   _katanaCollider: {fileID: 2108117077}
   _slashTrail: {fileID: 1825155933}
+  _damage: 25
+  _meleeHitMode: 1
+  _range: 2
+  _angle: 90
+  _targetMask:
+    serializedVersion: 2
+    m_Bits: 768
 --- !u!1 &1882147832
 GameObject:
   m_ObjectHideFlags: 0

@@ -1,8 +1,5 @@
 using UnityEngine;
 
-// 칼날(Blade)에 붙는다. 휘두르는 동안 켜진 트리거 콜라이더에 닿은 대상에게 대미지를 준다.
-// 콜라이더는 PlayerMeleeAttack이 애니메이션 이벤트에 맞춰 켜고 끈다.
-// 트리거 이벤트는 둘 중 하나에 Rigidbody가 있어야 발생하므로 칼날에 Kinematic Rigidbody를 붙인다.
 [RequireComponent(typeof(Rigidbody))]
 public class Katana : MonoBehaviour
 {

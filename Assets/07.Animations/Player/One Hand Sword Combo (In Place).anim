@@ -115048,6 +115048,13 @@ AnimationClip:
     floatParameter: 0
     intParameter: 0
     messageOptions: 0
+  - time: 1.08
+    functionName: FanAttack
+    data: 
+    objectReferenceParameter: {fileID: 0}
+    floatParameter: 0
+    intParameter: 0
+    messageOptions: 0
   - time: 1.23
     functionName: DeactivateCollider
     data: 
@@ -115062,6 +115069,13 @@ AnimationClip:
     floatParameter: 0
     intParameter: 0
     messageOptions: 0
+  - time: 2.06
+    functionName: FanAttack
+    data: 
+    objectReferenceParameter: {fileID: 0}
+    floatParameter: 0
+    intParameter: 0
+    messageOptions: 0
   - time: 2.23
     functionName: DeactivateCollider
     data: 
@@ -115071,6 +115085,13 @@ AnimationClip:
     messageOptions: 0
   - time: 2.87
     functionName: ActivateCollider
+    data: 
+    objectReferenceParameter: {fileID: 0}
+    floatParameter: 0
+    intParameter: 0
+    messageOptions: 0
+  - time: 3.03
+    functionName: FanAttack
     data: 
     objectReferenceParameter: {fileID: 0}
     floatParameter: 0
