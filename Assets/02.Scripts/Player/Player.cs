@@ -46,6 +46,10 @@ public class Player : MonoBehaviour, IDamageable
         {
             ChangeWeaponMode(WeaponMode.Sniper);
         }
+        else if (Input.GetKeyDown(KeyCode.Alpha3))
+        {
+            ChangeWeaponMode(WeaponMode.Melee);
+        }
     }
 
     private void ChangeWeaponMode(WeaponMode weaponMode)
