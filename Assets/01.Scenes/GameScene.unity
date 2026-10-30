@@ -6094,6 +6094,7 @@ MonoBehaviour:
   _bombText: {fileID: 1692764322}
   _normalWeaponSprite: {fileID: 21300000, guid: 574defbe89c063744a1d733daa5f258c, type: 3}
   _sniperWeaponSprite: {fileID: 21300000, guid: 3f32d06a4a36f4448a9ee0042776652f, type: 3}
+  _meleeWeaponSprite: {fileID: 21300000, guid: 80e01d5afd7783d45aad0d86eecb4828, type: 3}
 --- !u!1 &2063862805
 GameObject:
   m_ObjectHideFlags: 0

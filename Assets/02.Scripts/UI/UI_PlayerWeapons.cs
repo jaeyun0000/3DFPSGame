@@ -17,6 +17,7 @@ public class UI_PlayerWeapons : MonoBehaviour
     [Header("무기 이미지")]
     [SerializeField] private Sprite _normalWeaponSprite;
     [SerializeField] private Sprite _sniperWeaponSprite;
+    [SerializeField] private Sprite _meleeWeaponSprite;
 
     private void Start()
     {
@@ -58,7 +59,20 @@ public class UI_PlayerWeapons : MonoBehaviour
     {
         if (_weaponImage == null) return;
 
-        _weaponImage.sprite = weaponMode == WeaponMode.Sniper ? _sniperWeaponSprite : _normalWeaponSprite;
+        switch (weaponMode)
+        {
+            case WeaponMode.Sniper:
+                _weaponImage.sprite = _sniperWeaponSprite;
+                break;
+
+            case WeaponMode.Melee:
+                _weaponImage.sprite = _meleeWeaponSprite;
+                break;
+
+            default:
+                _weaponImage.sprite = _normalWeaponSprite;
+                break;
+        }
     }
 
     private void RefreshBulletCount(int bulletCount, int maxBulletCount)
