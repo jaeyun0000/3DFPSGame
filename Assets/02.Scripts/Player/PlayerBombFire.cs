@@ -24,6 +24,7 @@ public class PlayerBombFire : MonoBehaviour
     private Animator _animator;  // 군인 모델의 애니메이터
 
     private Player _player;
+    private CameraFollow _cameraFollow;  // 시점에 따라 던지는 방향을 알려준다.
 
     public int BombCount => _bombCount;
 
@@ -44,6 +45,7 @@ public class PlayerBombFire : MonoBehaviour
             maxSize: _poolSize);
 
         _player = GetComponent<Player>();
+        _cameraFollow = Camera.main.GetComponent<CameraFollow>();
     }
 
     private void Start()
@@ -82,7 +84,7 @@ public class PlayerBombFire : MonoBehaviour
             Bomb bomb = _bombPool.Get();
 
             // 3. 발사 위치에서 시선 방향으로 던지고, 무작위 방향으로 회전시키기
-            Vector3 force = Camera.main.transform.forward * _currentThrowPower;
+            Vector3 force = _cameraFollow.AimRay.direction * _currentThrowPower;
             Vector3 torque = UnityEngine.Random.onUnitSphere * _spinPower;
             bomb.Throw(_firePoint.position, force, torque);
 

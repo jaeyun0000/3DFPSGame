@@ -28,6 +28,8 @@ public class PlayerGunFire : MonoBehaviour
     private Coroutine _laserCoroutine;
 
     private Animator _animator;  // 군인 모델의 애니메이터
+    private CameraFollow _cameraFollow;  // 시점에 따라 조준 방향을 알려준다.
+    private int _hitLayerMask;           // 총알이 맞는 레이어 (3인칭에서 뒤에서 쏘면 자기 몸에 맞으므로 플레이어는 제외)
 
     public int BulletCount => _bulletCount;
     public int MaxBulletCount => _maxBulletCount;
@@ -39,6 +41,8 @@ public class PlayerGunFire : MonoBehaviour
     private void Awake()
     {
         _animator = GetComponentInChildren<Animator>();
+        _cameraFollow = Camera.main.GetComponent<CameraFollow>();
+        _hitLayerMask = Physics.DefaultRaycastLayers & ~LayerMask.GetMask("Player");
 
         _bulletCount = _maxBulletCount;
     }
@@ -128,14 +132,14 @@ public class PlayerGunFire : MonoBehaviour
         // RayCastHit: 레이저가 물체와 부닫히면 그 정보를 저장하는 구조체
 
         // 2. 레이(광선)을 생성하고 발사될 위치와 진행 방향 설정하기
-        Transform cameraTransform = Camera.main.transform;
-        Ray ray = new Ray(cameraTransform.position, cameraTransform.forward);
+        //    (1인칭, 3인칭은 화면 가운데, 쿼터뷰와 빽뷰는 플레이어가 바라보는 방향)
+        Ray ray = _cameraFollow.AimRay;
 
         // 3. 레이가 부딛힌 대상의 정보를 저장할 변수 생성하기
         RaycastHit hitInfo = new RaycastHit();
 
         // 4. 레이를 발사하고, 만일 부딛힐 물체가 있다면 이펙트 표시하기
-        bool isHit = Physics.Raycast(ray, out hitInfo, _range);
+        bool isHit = Physics.Raycast(ray, out hitInfo, _range, _hitLayerMask);
 
         // 맞으면 맞은 자리까지, 안 맞으면 사거리 끝까지 레이저를 그린다.
         Vector3 laserEndPoint = isHit ? hitInfo.point : ray.GetPoint(_range);
