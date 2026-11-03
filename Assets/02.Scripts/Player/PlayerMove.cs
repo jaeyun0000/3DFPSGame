@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 // z키보드 방향키에 따라 그 방향으로 이동하고 싶다.
@@ -6,6 +7,9 @@ public class PlayerMove : MonoBehaviour
     private const float Gravity = -20f;
     private const int MaxJump = 2;
     public const float MaxStamina = 100f;
+
+    // 애니메이터 파라미터 이름 (매 프레임 문자열을 해시로 바꾸지 않도록 미리 바꿔둔다.)
+    private static readonly int MoveMotionHash = Animator.StringToHash("MoveMotion");
 
     private float _yVelocity = 0f;  // 위아래 속도, 매 프레임마다 중력 가속도가 붙는다.
     private int _jumpCount = 0;      // 점프 횟수
@@ -26,6 +30,9 @@ public class PlayerMove : MonoBehaviour
 
     public float Stamina => _stamina;
 
+    // 스태미나가 바뀐 프레임에만 알린다. (가득 찬 채로 걷기만 하면 알리지 않는다.)
+    public event Action OnStaminaChanged;
+
     private void Awake()
     {
         _characterController = GetComponent<CharacterController>();
@@ -37,6 +44,8 @@ public class PlayerMove : MonoBehaviour
     {
         if (GameManager.Instance.State != GameState.Playing) return;
 
+        float previousStamina = _stamina;
+
         // 0. 스태미나 회복
         _stamina = Mathf.Min(MaxStamina, _stamina + _staminaRecovery * Time.deltaTime);
 
@@ -47,7 +56,7 @@ public class PlayerMove : MonoBehaviour
         // 2. 키보드 입력에 따라 방향을 구한다.
         Vector3 direction = new Vector3(h, 0, v);
         direction.Normalize();  // 대각선이어도 방향의 길이 1로 바꾸기 위해
-        _animator.SetFloat("MoveMotion", direction.magnitude);  // 움직이면 1, 멈추면 0
+        _animator.SetFloat(MoveMotionHash, direction.magnitude);  // 움직이면 1, 멈추면 0
         direction = transform.TransformDirection(direction);
         // 로컬 좌표계: 한 대상을 중심
         // 월드 좌표계: 세상을 중심
@@ -88,5 +97,10 @@ public class PlayerMove : MonoBehaviour
         // 6. 속도(방향과 속력)에 따라 이동한다.
         // transform.position += direction * _moveSpeed * Time.deltaTime;
         _characterController.Move(velocity * Time.deltaTime);
+
+        if (_stamina != previousStamina)
+        {
+            OnStaminaChanged?.Invoke();
+        }
     }
 }

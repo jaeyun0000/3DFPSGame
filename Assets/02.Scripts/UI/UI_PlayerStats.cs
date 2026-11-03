@@ -3,7 +3,6 @@ using UnityEngine.UI;
 
 public class UI_PlayerStats : MonoBehaviour
 {
-    // Todo. ZombieHealthBar를 이용해서 체력과 스태미나 UI 구현
     [SerializeField] private Slider _healthSlider;
     [SerializeField] private Slider _staminaSlider;
 
@@ -12,17 +11,20 @@ public class UI_PlayerStats : MonoBehaviour
 
     private void Start()
     {
+        // 체력과 스태미나 모두 값이 바뀔 때만 슬라이더를 갱신한다. (옵저버 패턴)
+        // 예전에는 스태미나를 Update에서 매 프레임 읽어서, 값이 그대로여도 매번 갱신했다.
         _player.OnDamaged += RefreshHealth;
+        _playerMove.OnStaminaChanged += RefreshStamina;
 
-        // 이벤트는 맞을 때만 오므로, 시작할 때 한 번 직접 그려준다.
+        // 이벤트는 값이 바뀔 때만 오므로, 시작할 때 한 번 직접 그려준다.
         RefreshHealth();
+        RefreshStamina();
     }
 
-
-    // 업데이트가 초당 60회 이상은 실행된다.
-    private void Update()
+    private void OnDestroy()
     {
-        _staminaSlider.value = _playerMove.Stamina / PlayerMove.MaxStamina;
+        _player.OnDamaged -= RefreshHealth;
+        _playerMove.OnStaminaChanged -= RefreshStamina;
     }
 
     private void RefreshHealth()
@@ -36,5 +38,10 @@ public class UI_PlayerStats : MonoBehaviour
         // 유튜브 구독 패턴은 유튜버가 영상을 올릴 때 이를 구독 중인 여러 구독자에게 알림
         // C#에서는 이것을 Action으로 구현할 수 있다
         _healthSlider.value = _player.Health / _player.MaxHealth;
+    }
+
+    private void RefreshStamina()
+    {
+        _staminaSlider.value = _playerMove.Stamina / PlayerMove.MaxStamina;
     }
 }

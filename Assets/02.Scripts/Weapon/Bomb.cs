@@ -5,6 +5,11 @@ using UnityEngine.Pool;
 [RequireComponent(typeof(Rigidbody))]
 public class Bomb : MonoBehaviour
 {
+    private const int ExplosionEffectPoolSize = 8;
+
+    // 폭발 범위 안의 콜라이더를 받는 버퍼 (OverlapSphere처럼 매번 배열을 만들지 않도록 모든 폭탄이 같이 쓴다.)
+    private static readonly Collider[] HitBuffer = new Collider[32];
+
     [SerializeField] private ParticleSystem _explosionEffectPrefab;
     [SerializeField] private float _explosionRange = 4.5f;
     [SerializeField] private float _damage = 100f;
@@ -12,10 +17,12 @@ public class Bomb : MonoBehaviour
     private Rigidbody _rigidbody;
     private IObjectPool<Bomb> _pool;
     private bool _isExploded;   // 한 프레임에 여러 번 부딛혀도 한 번만 폭발하도록
+    private int _damageLayerMask;
 
     private void Awake()
     {
         _rigidbody = GetComponent<Rigidbody>();
+        _damageLayerMask = LayerMask.GetMask("Drum", "Zombie");
     }
 
     public void SetPool(IObjectPool<Bomb> pool)
@@ -44,8 +51,7 @@ public class Bomb : MonoBehaviour
         if (_isExploded) return;
         _isExploded = true;
 
-        ParticleSystem effect = Instantiate(_explosionEffectPrefab, transform.position, Quaternion.identity);
-        effect.Play();
+        EffectPool.Play(_explosionEffectPrefab, transform.position, Quaternion.identity, ExplosionEffectPoolSize);
 
         ApplyAreaDamage();
 
@@ -63,18 +69,20 @@ public class Bomb : MonoBehaviour
     private void ApplyAreaDamage()
     {
         // 0. 주위에 있는 드럼통들을 모두 찾는다.
-        // Physics.OverlapSpere(원점, 반지름, 찾을 레이어들)
-        Collider[] colliders = Physics.OverlapSphere(transform.position, _explosionRange, LayerMask.GetMask("Drum", "Zombie"));
+        // Physics.OverlapSphereNonAlloc(원점, 반지름, 결과 버퍼, 찾을 레이어들): 찾은 개수를 돌려준다.
+        int count = Physics.OverlapSphereNonAlloc(transform.position, _explosionRange, HitBuffer, _damageLayerMask);
 
         // 1. 드럼통과 좀비들에게 대미지를 준다.
-        foreach (Collider col in colliders)
+        for (int i = 0; i < count; i++)
         {
+            Collider col = HitBuffer[i];
+            Vector3 hitPoint = col.ClosestPoint(transform.position);
             DamageInfo damageInfo = new()
             {
                 Value = _damage,
 
-                HitPoint = col.ClosestPoint(transform.position),
-                HitNormal = (transform.position - col.ClosestPoint(transform.position)).normalized
+                HitPoint = hitPoint,
+                HitNormal = (transform.position - hitPoint).normalized
             };
 
             col.GetComponent<IDamageable>()?.TakeDamage(damageInfo);

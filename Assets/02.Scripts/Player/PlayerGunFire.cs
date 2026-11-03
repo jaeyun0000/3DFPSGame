@@ -5,6 +5,9 @@ using UnityEngine;
 // a=마우스 왼쪽 버튼을 누르면 바라보는 방향으로 총알을 발사하고 싶다
 public class PlayerGunFire : MonoBehaviour
 {
+    // 애니메이터 파라미터 이름 (문자열 비교를 피하려고 해시로 미리 바꿔둔다.)
+    private static readonly int FireHash = Animator.StringToHash("Fire");
+
     [SerializeField] private ParticleSystem _hitEffectPrefabs;
 
     [Header("Stat")]
@@ -28,6 +31,11 @@ public class PlayerGunFire : MonoBehaviour
     private Coroutine _reloadCoroutine;
     private Coroutine _laserCoroutine;
 
+    // 발사할 때마다 new로 만들면 가비지가 생기므로 미리 만들어 재사용한다.
+    private WaitForSeconds _reloadingWait;
+    private WaitForSeconds _laserWait;
+    private WaitForSeconds _flashWait;
+
     private Animator _animator;  // 군인 모델의 애니메이터
     private CameraFollow _cameraFollow;  // 시점에 따라 조준 방향을 알려준다.
     private int _hitLayerMask;           // 총알이 맞는 레이어 (3인칭에서 뒤에서 쏘면 자기 몸에 맞으므로 플레이어는 제외)
@@ -46,6 +54,10 @@ public class PlayerGunFire : MonoBehaviour
         _hitLayerMask = Physics.DefaultRaycastLayers & ~LayerMask.GetMask("Player");
 
         _bulletCount = _maxBulletCount;
+
+        _reloadingWait = new WaitForSeconds(_reloadingTime);
+        _laserWait = new WaitForSeconds(_laserDuration);
+        _flashWait = new WaitForSeconds(_flashTime);
     }
 
     private void Start()
@@ -67,7 +79,7 @@ public class PlayerGunFire : MonoBehaviour
         bool isFiring = !isMouseVisible && Input.GetButton("Fire1") && _bulletCount > 0;
 
         // 쏘는 동안 상체(Fire Layer)만 쏘는 동작을 한다. 연사 간격 사이에도 켜 둬야 동작이 끊기지 않는다.
-        _animator.SetBool("Fire", isFiring);
+        _animator.SetBool(FireHash, isFiring);
 
         if (isFiring && _fireTimer <= 0f)
         {
@@ -81,7 +93,7 @@ public class PlayerGunFire : MonoBehaviour
             if (_reloadCoroutine == null) return;
 
             StopCoroutine(_reloadCoroutine);
-            Debug.Log("재장전 취소");
+            GameLogger.Log("재장전 취소");
             _reloadCoroutine = null;
         }
 
@@ -94,12 +106,12 @@ public class PlayerGunFire : MonoBehaviour
 
     private IEnumerator Reloading_Coroutine()
     {
-        Debug.Log("재장전 시작");
-        yield return new WaitForSeconds(_reloadingTime);
+        GameLogger.Log("재장전 시작");
+        yield return _reloadingWait;
 
         _bulletCount = _maxBulletCount;
         OnBulletCountChanged?.Invoke(_bulletCount, _maxBulletCount);
-        Debug.Log("재장전 완료");
+        GameLogger.Log("재장전 완료");
     }
 
     private void ShowLaser(Vector3 startPoint, Vector3 endPoint)
@@ -118,7 +130,7 @@ public class PlayerGunFire : MonoBehaviour
 
     private IEnumerator HideLaser_Coroutine()
     {
-        yield return new WaitForSeconds(_laserDuration);
+        yield return _laserWait;
 
         _laserLine.enabled = false;
         _laserCoroutine = null;
@@ -153,11 +165,9 @@ public class PlayerGunFire : MonoBehaviour
         {
             // Debug.Log($"{hitInfo.collider.name}이 총알에 맞았다. 대미지: {_damage}");
 
-            // 맞은 자리에 총알 자국 이펙트 만들기
-            ParticleSystem effect = Instantiate(_hitEffectPrefabs);
-            effect.transform.position = hitInfo.point;  // 맞은 자리
-            effect.transform.forward = hitInfo.normal;  // 수직 위치로 회전
-            effect.Play();
+            // 맞은 자리에 총알 자국 이펙트를 맞은 면의 수직 방향으로 재생한다.
+            // (발사할 때마다 Instantiate하고 재생 후 파괴하던 것을 풀에서 돌려쓰도록 바꿨다.)
+            EffectPool.Play(_hitEffectPrefabs, hitInfo.point, Quaternion.LookRotation(hitInfo.normal));
 
             DamageInfo damageInfo = new DamageInfo();
             damageInfo.Value = _damage;
@@ -214,7 +224,7 @@ public class PlayerGunFire : MonoBehaviour
         GameObject flash = _muzzleFlashes[randomIndex];
         flash.SetActive(true);
 
-        yield return new WaitForSeconds(_flashTime);
+        yield return _flashWait;
 
         flash.SetActive(false);
     }

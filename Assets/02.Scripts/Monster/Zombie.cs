@@ -33,6 +33,7 @@ public class Zombie : MonoBehaviour, IDamageable
     private const float JumpClearance = 1f;         // 낮게 뛸 때 출발/착지 중 높은 쪽보다 이만큼 더 솟는다. (필요한 만큼만 뛴다)
     private const float StuckJumpMinCloser = 0.5f;  // 막혔을 때 점프는 플레이어에게 이만큼 이상 가까워져야 한다.
     private const float GroundSearchRadius = 3f;    // 목표 아래에 걸을 수 있는 바닥이 없을 때 주변에서 찾는 반경
+    private const int BloodSprayPoolSize = 3;       // 한 좀비에게 동시에 보일 수 있는 피 이펙트 수
 
     // 애니메이터 트리거 이름 (문자열 비교를 피하려고 해시로 미리 바꿔둔다.)
     private static readonly int IdleToMoveHash = Animator.StringToHash("IdleToMove");
@@ -100,8 +101,12 @@ public class Zombie : MonoBehaviour, IDamageable
     // 스포너에서 생성된 좀비만 풀을 가진다. (씬에 직접 배치한 좀비는 null)
     private IObjectPool<Zombie> _pool;
 
-    // 풀에서 다시 꺼낼 때 남은 피를 지우기 위해 생성한 피 이펙트를 기억한다.
-    private readonly List<GameObject> _bloodSprays = new List<GameObject>();
+    // 피 이펙트는 맞을 때마다 만들고 지우지 않고, 미리 정한 개수를 껐다 켜며 돌려쓴다. (링 버퍼)
+    private readonly GameObject[] _bloodSprays = new GameObject[BloodSprayPoolSize];
+    private readonly float[] _bloodSprayEndTimes = new float[BloodSprayPoolSize];   // 각 피 이펙트를 끌 시각
+    private int _nextBloodSpray;
+
+    private IDamageable _playerDamageable;   // 공격할 때마다 GetComponent하지 않도록 캐싱
 
     public float MaxHealth => _maxHealth;
     public float Health => _health;
@@ -126,6 +131,7 @@ public class Zombie : MonoBehaviour, IDamageable
     {
         _collider = GetComponent<CapsuleCollider>();
         _player = GameObject.FindGameObjectWithTag("Player").transform;
+        _playerDamageable = _player.GetComponent<IDamageable>();
 
         // 길을 찾아 걷게 해주는 컴포넌트 NavMeshAgent를 찾아서 참조
         // (아래 Idle 진입에서 이동을 멈추므로 상태를 바꾸기 전에 찾아둔다.)
@@ -151,6 +157,9 @@ public class Zombie : MonoBehaviour, IDamageable
 
     private void Update()
     {
+        // 피 이펙트는 게임 상태와 상관없이 시간이 지나면 끈다.
+        HideExpiredBloodSprays();
+
         if (GameManager.Instance.State != GameState.Playing) return;
 
         _state.Update();
@@ -495,32 +504,51 @@ public class Zombie : MonoBehaviour, IDamageable
         _jumpReadyTime = Time.time + _jumpCooldown;
     }
 
-    // 좀비의 자식으로 블러드 스프레이를 생성하고, 지속 시간이 지나면 제거한다.
-    // (이펙트가 반복 재생으로 설정되어 있어서 직접 지우지 않으면 계속 피가 나온다.)
+    // 좀비의 자식인 블러드 스프레이를 맞은 자리에서 켜고, 지속 시간이 지나면 끈다.
+    // (이펙트가 반복 재생으로 설정되어 있어서 직접 끄지 않으면 계속 피가 나온다.)
     private void SpawnBloodSpray(DamageInfo damageInfo)
     {
-        // 이미 지워진 이펙트는 Unity에서 null로 판정되므로 리스트에서 정리한다.
-        _bloodSprays.RemoveAll(spray => spray == null);
+        // 처음 쓰는 칸만 생성한다. 이후로는 가장 오래전에 켠 것을 다시 쓴다.
+        GameObject bloodSpray = _bloodSprays[_nextBloodSpray];
+        if (bloodSpray == null)
+        {
+            bloodSpray = Instantiate(_bloodSprayPrefab, transform);
+            _bloodSprays[_nextBloodSpray] = bloodSpray;
+        }
 
-        GameObject bloodSpray = Instantiate(_bloodSprayPrefab, transform);
+        // 껐다 켜야 Play On Awake로 처음부터 다시 재생된다.
+        bloodSpray.SetActive(false);
         bloodSpray.transform.position = damageInfo.HitPoint;
         bloodSpray.transform.forward = damageInfo.HitNormal;
+        bloodSpray.SetActive(true);
 
-        _bloodSprays.Add(bloodSpray);
-        Destroy(bloodSpray, _bloodSprayDuration);
+        _bloodSprayEndTimes[_nextBloodSpray] = Time.time + _bloodSprayDuration;
+        _nextBloodSpray = (_nextBloodSpray + 1) % BloodSprayPoolSize;
     }
 
-    // 남아 있는 블러드 스프레이를 모두 제거한다.
+    // 지속 시간이 지난 블러드 스프레이를 끈다.
+    private void HideExpiredBloodSprays()
+    {
+        for (int i = 0; i < BloodSprayPoolSize; i++)
+        {
+            GameObject bloodSpray = _bloodSprays[i];
+            if (bloodSpray != null && bloodSpray.activeSelf && Time.time >= _bloodSprayEndTimes[i])
+            {
+                bloodSpray.SetActive(false);
+            }
+        }
+    }
+
+    // 남아 있는 블러드 스프레이를 모두 끈다.
     private void ClearBloodSprays()
     {
         foreach (GameObject bloodSpray in _bloodSprays)
         {
             if (bloodSpray != null)
             {
-                Destroy(bloodSpray);
+                bloodSpray.SetActive(false);
             }
         }
-        _bloodSprays.Clear();
     }
 
     public float GetDistanceToPlayer()
@@ -620,7 +648,7 @@ public class Zombie : MonoBehaviour, IDamageable
             HitNormal = (transform.position - _player.position).normalized,
         };
 
-        _player.GetComponent<IDamageable>().TakeDamage(info);
+        _playerDamageable.TakeDamage(info);
     }
 
     public float GetRandomIdleTime()

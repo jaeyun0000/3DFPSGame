@@ -19,8 +19,6 @@ public class Player : MonoBehaviour, IDamageable
     // 무기 모드가 바뀌면 바뀐 모드를 알려준다.
     public event Action<WeaponMode> OnWeaponModeChanged;
 
-    [SerializeField] private UI_HitEffect _uiHitEffect;
-
     private Animator _animator;
     private int _injuredLayerIndex;
 
@@ -72,14 +70,14 @@ public class Player : MonoBehaviour, IDamageable
         float injured = Mathf.InverseLerp(0.5f, 0f, healthPercent);
         _animator.SetLayerWeight(_injuredLayerIndex, injured);
 
+        // 화면 피격 효과는 UI_HitEffect가 이 이벤트를 구독해서 처리한다.
         OnDamaged?.Invoke();
 
-        _uiHitEffect.Fade(0.6f);
-
-        Debug.Log($"플레이어가 맞았다. 대미지 {damageInfo.Value}, 남은 체력 {_health}");
+        // GameLogger.Log는 ENABLE_LOG가 없는 빌드에서 호출(문자열 생성 포함)이 통째로 제거된다.
+        GameLogger.Log($"플레이어가 맞았다. 대미지 {damageInfo.Value}, 남은 체력 {_health}");
         if (_health <= 0f)
         {
-            Debug.Log("플레이어가 쓰러졌다!");
+            GameLogger.Log("플레이어가 쓰러졌다!");
             GameManager.Instance.GameOver();
         }
     }

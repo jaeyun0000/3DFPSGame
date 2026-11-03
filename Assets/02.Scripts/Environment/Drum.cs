@@ -5,6 +5,11 @@ using UnityEngine;
 [RequireComponent(typeof(Rigidbody))]
 public class Drum : MonoBehaviour, IDamageable
 {
+    private const int ExplosionEffectPoolSize = 8;
+
+    // 폭발 범위 안의 콜라이더를 받는 버퍼 (OverlapSphere처럼 매번 배열을 만들지 않도록 모든 드럼통이 같이 쓴다.)
+    private static readonly Collider[] HitBuffer = new Collider[32];
+
     [SerializeField] private ParticleSystem _explosionEffectPrefab;
 
     [Header("스탯")]
@@ -17,10 +22,12 @@ public class Drum : MonoBehaviour, IDamageable
     [SerializeField] private float _explosionDelay = 0.2f;
 
     private Rigidbody _rigidbody;
+    private int _damageLayerMask;
 
     private void Awake()
     {
         _rigidbody = GetComponent<Rigidbody>();
+        _damageLayerMask = LayerMask.GetMask("Drum", "Zombie");
     }
 
     public void TakeDamage(DamageInfo damageInfo)
@@ -44,9 +51,8 @@ public class Drum : MonoBehaviour, IDamageable
         yield return new WaitForSeconds(_explosionDelay);
 
         // 1. 폭발 이펙트를 생성한다.
-        ParticleSystem effect = Instantiate(_explosionEffectPrefab, transform.position, Quaternion.identity);
+        ParticleSystem effect = EffectPool.Play(_explosionEffectPrefab, transform.position, Quaternion.identity, ExplosionEffectPoolSize);
         effect.transform.localScale = Vector3.one * 10f;
-        effect.Play();
 
         // 2. 위로 튀어오르며 빙글빙글 돈다.
         _rigidbody.AddForce(Vector3.up * _launchPower, ForceMode.Impulse);
@@ -63,12 +69,13 @@ public class Drum : MonoBehaviour, IDamageable
     private void ApplyAreaDamage()
     {
         // 0. 주위에 있는 드럼통들을 모두 찾는다.
-        // Physics.OverlapSpere(원점, 반지름, 찾을 레이어들)
-        Collider[] colliders = Physics.OverlapSphere(transform.position, _explosionRange, LayerMask.GetMask("Drum", "Zombie"));
+        // Physics.OverlapSphereNonAlloc(원점, 반지름, 결과 버퍼, 찾을 레이어들): 찾은 개수를 돌려준다.
+        int count = Physics.OverlapSphereNonAlloc(transform.position, _explosionRange, HitBuffer, _damageLayerMask);
 
         // 1. 드럼통과 좀비들에게 대미지를 준다.
-        foreach (Collider col in colliders)
+        for (int i = 0; i < count; i++)
         {
+            Collider col = HitBuffer[i];
             Vector3 hitPoint = col.ClosestPoint(transform.position);
             DamageInfo damageInfo = new DamageInfo
             {

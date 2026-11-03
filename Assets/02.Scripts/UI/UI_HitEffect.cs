@@ -9,11 +9,14 @@ public class UI_HitEffect : MonoBehaviour
     [SerializeField] private float _fadeTime = 0.3f;
 
     private Image _image;
+    private WaitForSeconds _flashWait;   // 맞을 때마다 new로 만들지 않도록 재사용
+    private Coroutine _fadeCoroutine;
 
     private void Awake()
     {
         _image = GetComponent<Image>();
         _image.enabled = false;
+        _flashWait = new WaitForSeconds(_flashTime);
     }
 
     private void Start()
@@ -44,7 +47,7 @@ public class UI_HitEffect : MonoBehaviour
     {
         _image.enabled = true;
 
-        yield return new WaitForSeconds(_flashTime);
+        yield return _flashWait;
 
         _image.enabled = false;
     }
@@ -55,7 +58,12 @@ public class UI_HitEffect : MonoBehaviour
         // 2. 0.4에서 서서히 0으로 가서 사라지게 한다.
         SetAlpha(alpha);
 
-        StartCoroutine(Fade_Coroutine());
+        // 연속으로 맞으면 이전 페이드를 멈춘다. (여러 코루틴이 동시에 알파값을 덮어쓰지 않도록)
+        if (_fadeCoroutine != null)
+        {
+            StopCoroutine(_fadeCoroutine);
+        }
+        _fadeCoroutine = StartCoroutine(Fade_Coroutine());
     }
 
     private IEnumerator Fade_Coroutine()
@@ -75,6 +83,8 @@ public class UI_HitEffect : MonoBehaviour
             elpasedTime += Time.deltaTime;
             yield return null;  // 한 프레임씩 쉰다
         }
+
+        _fadeCoroutine = null;
     }
 
     private void SetAlpha(float alpha)

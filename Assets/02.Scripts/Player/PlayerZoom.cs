@@ -7,11 +7,13 @@ public class PlayerZoom : MonoBehaviour
     [SerializeField] private float _sniperPov = 15f;
     private Player _player;
     private CameraFollow _cameraFollow;
+    private Camera _camera;   // 매 프레임 Camera.main을 찾지 않도록 캐싱
 
     private void Awake()
     {
         _player = GetComponent<Player>();
-        _cameraFollow = Camera.main.GetComponent<CameraFollow>();
+        _camera = Camera.main;
+        _cameraFollow = _camera.GetComponent<CameraFollow>();
     }
 
     private void Update()
@@ -26,6 +28,6 @@ public class PlayerZoom : MonoBehaviour
                          && _cameraFollow.ViewMode == CameraViewMode.FirstPerson
                          && Input.GetMouseButton(1);
         _sniperZoom.SetActive(isZooming);
-        Camera.main.fieldOfView = isZooming ? _sniperPov : _normalPov;
+        _camera.fieldOfView = isZooming ? _sniperPov : _normalPov;
     }
 }

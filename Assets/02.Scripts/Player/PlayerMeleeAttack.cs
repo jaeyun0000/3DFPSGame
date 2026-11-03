@@ -8,6 +8,12 @@ public enum MeleeHitMode
 
 public class PlayerMeleeAttack : MonoBehaviour
 {
+    // 애니메이터 트리거 이름 (문자열 비교를 피하려고 해시로 미리 바꿔둔다.)
+    private static readonly int SlashHash = Animator.StringToHash("Slash");
+
+    // 부채꼴 범위 안의 콜라이더를 받는 버퍼 (OverlapSphere처럼 매번 배열을 만들지 않도록 재사용한다.)
+    private static readonly Collider[] HitBuffer = new Collider[32];
+
     private Player _player;
     private Animator _animator;
     private int _meleeLayerIndex;
@@ -23,6 +29,7 @@ public class PlayerMeleeAttack : MonoBehaviour
     [SerializeField] private LayerMask _targetMask;
 
     private int _wallLayerMask;   // 적과 나 사이를 가로막는 레이어
+    private Renderer _katanaRenderer;   // 칼 모델 (칼날 콜라이더의 부모에 붙어 있다.)
 
     private void Awake()
     {
@@ -35,6 +42,21 @@ public class PlayerMeleeAttack : MonoBehaviour
         _slashTrail.emitting = false;
 
         _wallLayerMask = LayerMask.GetMask("Wall");
+
+        // 칼 모델은 폴리곤이 많아서, 칼을 쓰지 않는 무기 모드에서는 그리지 않는다. (그림자도 같이 빠진다.)
+        _katanaRenderer = _katanaCollider.GetComponentInParent<MeshRenderer>();
+        _player.OnWeaponModeChanged += RefreshKatanaVisible;
+        RefreshKatanaVisible(_player.WeaponMode);
+    }
+
+    private void OnDestroy()
+    {
+        _player.OnWeaponModeChanged -= RefreshKatanaVisible;
+    }
+
+    private void RefreshKatanaVisible(WeaponMode weaponMode)
+    {
+        _katanaRenderer.enabled = weaponMode == WeaponMode.Melee;
     }
 
     public void FanAttack()
@@ -43,9 +65,11 @@ public class PlayerMeleeAttack : MonoBehaviour
 
         Vector3 origin = _player.transform.position;
 
-        Collider[] colliders = Physics.OverlapSphere(origin, _range, _targetMask);
-        foreach (Collider col in colliders)
+        int count = Physics.OverlapSphereNonAlloc(origin, _range, HitBuffer, _targetMask);
+        for (int i = 0; i < count; i++)
         {
+            Collider col = HitBuffer[i];
+
             // 적의 타격점을 찾는다;
             Vector3 hitPoint = col.ClosestPoint(origin);
 
@@ -127,7 +151,7 @@ public class PlayerMeleeAttack : MonoBehaviour
 
         if (Input.GetButtonDown("Fire2"))
         {
-            _animator.SetTrigger("Slash");
+            _animator.SetTrigger(SlashHash);
         }
     }
 }
