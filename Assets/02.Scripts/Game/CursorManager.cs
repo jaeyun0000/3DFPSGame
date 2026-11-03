@@ -1,10 +1,11 @@
 using UnityEngine;
 
 // 마우스 커서를 화면 가운데에 잠그고 숨긴다.
-public class CursorManager : MonoBehaviour
+public class CursorManager : SingletonBehaviour<CursorManager>
 {
-    private void Awake()
+    protected override void Awake()
     {
+        base.Awake();
         LockCursor();
     }
 
@@ -12,11 +13,15 @@ public class CursorManager : MonoBehaviour
     {
         if (GameManager.Instance.State != GameState.Playing) return;
 
-        if (Input.GetKeyDown(KeyCode.LeftAlt))
+        // Alt를 누르고 있는 동안만 커서를 푼다.
+        if (Input.GetKey(KeyCode.LeftAlt))
         {
             UnlockCursor();
+            return;
         }
-        else if (Input.GetKeyUp(KeyCode.LeftAlt))
+
+        // 에디터는 ESC를 누르면 커서 잠금을 강제로 풀기 때문에, 플레이 중에 풀려 있으면 다시 잠근다.
+        if (Cursor.lockState != CursorLockMode.Locked || Cursor.visible)
         {
             LockCursor();
         }
