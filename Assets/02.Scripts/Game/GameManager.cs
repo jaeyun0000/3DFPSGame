@@ -19,6 +19,7 @@ public class GameManager : SingletonBehaviour<GameManager>
     [SerializeField] private TextMeshProUGUI _stateText;
     [SerializeField] private Animator _playerAnimator;      // 게임 오버 때 군인을 서 있는 동작으로 돌린다.
     [SerializeField] private UI_OptionPopup _optionPopup;   // ESC를 누르면 뜨는 일시정지 팝업
+    [SerializeField] private UI_GameOverPopup _gameOverPopup;  // 플레이어가 죽으면 뜨는 게임 오버 팝업
 
     private void Start()
     {
@@ -90,9 +91,8 @@ public class GameManager : SingletonBehaviour<GameManager>
     {
         _state = GameState.GameOver;
 
-        _stateText.gameObject.SetActive(true);
-        _stateText.text = "게임오버";
-        _stateText.color = Color.red;
+        _gameOverPopup.Show();
+        CursorManager.Instance.UnlockCursor();  // 팝업 버튼을 누를 수 있게 커서를 푼다.
 
         _playerAnimator.SetFloat("MoveMotion", 0f);  // 달리던 중이었어도 서 있는 동작으로 돌린다.
     }
