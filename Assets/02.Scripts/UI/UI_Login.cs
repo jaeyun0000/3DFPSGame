@@ -1,7 +1,5 @@
-using System.Text.RegularExpressions;
 using TMPro;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 public class UI_Login : MonoBehaviour
@@ -80,7 +78,9 @@ public class UI_Login : MonoBehaviour
 
         if (_repository.CheckPassword(id, password))
         {
-            SceneManager.LoadScene("GameScene");
+            // 씬은 다음 프레임에 바뀌므로, 그 사이에 다시 눌러 두 번 불러오지 않게 막는다.
+            _loginButton.interactable = false;
+            SceneLoader.Load(SceneNames.Game);
         }
         else
         {
